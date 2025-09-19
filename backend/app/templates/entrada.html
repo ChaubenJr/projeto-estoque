@@ -9,21 +9,21 @@
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg" style="background-color:rgb(2, 33, 56);" data-bs-theme="dark">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#">
-                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo da Empresa" height="40">
+            <a class="navbar-brand" href="{{ url_for('main.index') }}">
+                <img src="logo.png" alt="Logo da Empresa" height="40">
             </a>
             <div class="ms-auto">
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link" href="entrada.html">Entradas</a>
+                        <a class="nav-link" href="/backend/app/templates/entrada.html">Entradas</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="saida.html">Saídas</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="estoque.html">Estoque</a>
+                        <a class="nav-link" href="/backend/app/templates/">Estoque</a>
                     </li>
                 </ul>
             </div>
@@ -31,41 +31,19 @@
     </nav>
     
     <div class="container mt-5">
-        <div class="card shadow bg-info text-white">
+        <div class="card shadow text-white" style="background-color:rgb(2, 33, 56);">
             <div class="card-body">
                 <h4 class="card-title text-center">Registro de Embalagens</h4>
-
-                <form action="http://localhost:5000/entrada_embalagem" method="POST">
+                <form action="{{ url_for('main.entrada_embalagem') }}" method="POST">
                     
                     <div class="row mb-4 mt-5">
                         <div class="col-md-4 mb-3">
                             <label class="form-label">Código do Produto</label>
                             <select class="form-select" id="cod_produto_embalagem" name="cod_produto_embalagem">
-                                <option>Selecione</option>
-                                <option value="I012277">I012277 - Saco Plástico</option>
-                                <option value="I012278">I012278 - Saco Poliex</option>
-                                <option value="I012219">I012219 - Embalagem Plástica</option>
-                                <option value="I012378">I012378 - Caixa de Papelão Pequena</option>
-                                <option value="I005720">I005720 - Fita Adesiva Transparente</option>
-                                <option value="I012604">I012604 - Plástico Bolha</option>
-                                <option value="I014062">I014062 - Fita de Arquear</option>
-                                <option value="I012279">I012279 - Filme Stretch</option>
-                                <option value="I013797">I013797 - Cantoneira de Papelão</option>
-                                <option value="I012714">I012714 - Protetor de Espuma</option>
-                                <option value="I007237">I007237 - Papel Kraft</option>
-                                <option value="I012890">I012890 - Saco de Lixo Reforçado</option>
-                                <option value="I013394">I013394 - Fita Gomada</option>
-                                <option value="I000886">I000886 - Etiqueta Adesiva</option>
-                                <option value="I001215">I001215 - Caixa de Papelão Grande</option>
-                                <option value="I012417">I012417 - Saco Plástico com Fecho Zip</option>
-                                <option value="I013283">I013283 - Pallet Plástico</option>
-                                <option value="I002191">I002191 - Fita Adesiva Dupla Face</option>
-                                <option value="I012218">I012218 - Bobina de Plástico</option>
-                                <option value="I012282">I012282 - Fita de Embalagem</option>
-                                <option value="I014109">I014109 - Sacola de Papel</option>
-                                <option value="I014243">I014243 - Tubo de Envio</option>
-                                <option value="I004333">I004333 - Envelopes de Segurança</option>
-                                <option value="I001630">I001630 - Protetor de Canto</option>
+                                <option selected>Selecione...</option>
+                                {% for produto in produtos %}
+                                <option value="{{ produto.cod_produto_embalagem }}">{{ produto.cod_produto_embalagem }} - {{ produto.nome_produto }}</option>
+                                {% endfor %}
                             </select>
                         </div>
                         <div class="col-md-8 mb-3">
@@ -75,19 +53,15 @@
                     </div>
 
                     <div class="row mb-4">
-                        <div class="col-md-3 mb-3">
+                        <div class="col-md-4 mb-3">
                             <label class="form-label">Nota Fiscal</label>
                             <input type="text" class="form-control" id="nf" name="nf">
                         </div>
-                        <div class="col-md-3 mb-3">
+                        <div class="col-md-4 mb-3">
                             <label class="form-label">Padrão de Embalagem</label>
                             <input type="text" class="form-control" id="padraoProduto" readonly>
                         </div>
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label">Unidade de Medida</label>
-                            <input type="text" class="form-control" id="unidade_medida" name="unidade_medida">
-                        </div>
-                        <div class="col-md-3 mb-3">
+                        <div class="col-md-4 mb-3">
                             <label class="form-label">Quantidade Recebida</label>
                             <input type="number" class="form-control" id="quantidade_recebida" name="quantidade_recebida">
                         </div>
@@ -103,14 +77,14 @@
                             <input type="date" class="form-control" id="data_recebimento" name="data_recebimento">
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label class="form-label">Total</label>
+                            <label class="form-label">Valor Total</label>
                             <input type="number" step="0.01" class="form-control" id="total" name="total">
                         </div>
                     </div>
 
                     <div class="d-flex justify-content-center mt-5">
-                        <button type="submit" class="btn btn-success btn-sm me-2">Registrar Entrada</button>
-                        <button type="button" class="btn btn-primary btn-sm">Ver Registro Diário</button>
+                        <button type="submit" class="btn btn-sm me-2" style="background-color: rgb(0, 151, 100)" data-bs-theme="dark">Registrar Entrada</button>
+                        <button type="button" class="btn btn-secondary btn-sm">Ver Registro Diário</button>
                     </div>
                 </form>
             </div>
