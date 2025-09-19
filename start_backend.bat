@@ -1,0 +1,6 @@
+@echo off
+echo Iniciando o ambiente do backend...
+cd /d c:\xampp\htdocs\estoque\backend
+call venv\Scripts\activate
+echo Ambiente virtual ativado. Iniciando o servidor Flask...
+py run.py
