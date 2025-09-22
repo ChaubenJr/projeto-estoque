@@ -41,7 +41,4 @@ JS	https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js
 
 
 <button id="btnSaida" class="btn btn-primary">Registro de saída</button>
-
-<nav class="navbar" style="background-color: #e3f2fd;" data-bs-theme="light">
-<nav class="navbar navbar-expand-lg style="background-color: #e3f2fd;" data-bs-theme="light"">
 >>>>>>> 3fdd0ce06c538d82b6b0f47d089282f743e87e00

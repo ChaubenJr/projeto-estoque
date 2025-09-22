@@ -2,7 +2,7 @@ from flask import Flask, render_template
 from config import Config
 from app.models import db
 from app.routes import bp
-from waitress import serve
+# from waitress import serve # Waitress é ótimo para produção
 
 
 def create_app():
@@ -19,5 +19,6 @@ app = create_app()
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-
-    serve(app, host='0.0.0.0', port=5000)
+    
+    
+app.run(host='0.0.0.0', port=5000, debug=True)
