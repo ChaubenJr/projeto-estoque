@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Posição de Estoque</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg" style="background-color:rgb(2, 33, 56);" data-bs-theme="dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('main.index') }}">
+                <img src="{{ url_for('static', filename='img/Logo ITP.png') }}" alt="Logo da Empresa" height="70">
+            </a>
+            <div class="ms-auto">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.entrada') }}">Entradas</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.saida') }}">Saídas</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('main.estoque') }}">Estoque</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container mt-5">
+        <h2 class="text-center mb-4">Posição Atual do Estoque</h2>
+        <table class="table table-striped table-hover shadow">
+            <thead class="table-dark">
+                <tr>
+                    <th>Código do Produto</th>
+                    <th>Nome do Produto</th>
+                    <th class="text-end">Saldo em Estoque</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for codigo, nome, saldo in estoque_total %}
+                <tr>
+                    <td>{{ codigo }}</td>
+                    <td>{{ nome }}</td>
+                    <td class="text-end fw-bold">{{ saldo | int }}</td> {# O filtro 'int' remove as casas decimais #}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
