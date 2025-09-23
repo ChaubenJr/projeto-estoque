@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estoque de Embalagens</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+    <link rel="preload" as="image" href="{{ url_for('static', filename='img/back.jpg') }}">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg " style="background-color: rgb(2, 33, 56);" data-bs-theme="dark">
+        <div class="container-fluid">
+             <a class="navbar-brand" href="{{ url_for('main.index') }}">
+                <img src="{{ url_for('static', filename='img/Logo ITP.png') }}" alt="Logo da Empresa" height="70">
+             </a>
+            <div class="ms-auto center">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.entrada') }}">Entradas</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.saida') }}">Saídas</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.estoque') }}">Estoque</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5 mb-5">
+        <div class="card shadow text-white" style="background-color:rgb(2, 33, 56);">
+            <div class="card-body">
+                <h4 class="card-title text-center">Estoque de Embalagens</h4>
+            </div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Descrição</th>
+                            <th>Estoque Atual</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in estoque_total %}
+                        <tr>
+                            <td>{{ item[0] }}</td>
+                            <td>{{ item[1] }}</td>
+                            <td>{{ item[2] }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="3">Nenhum dado de estoque encontrado.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <a href="mailto:chaubenjunior@gmail.com" class="d-flex justify-content-center mb-3 me-3">
+                <input type="button" value="enviar estoque">
+            </a>
+        </div>
+    </div>
+
+</body>
+</html>
