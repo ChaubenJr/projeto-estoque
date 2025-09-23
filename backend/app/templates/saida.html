@@ -4,26 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registro de Estoque</title>
-    <link rel="stylesheet" href="/backend/app/static/main.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
 </head>
 <body>
 
     <nav class="navbar navbar-expand-lg" style="background-color:rgb(2, 33, 56);" text-white data-bs-theme="dark">
         <div class="container-fluid">
             <a class="navbar-brand" href="{{ url_for('main.index') }}">
-                <img src="/backend/app/static/img/Logo ITP.png" alt="Logo da Empresa" height="40">
+                <img src="{{ url_for('static', filename='img/Logo ITP.png') }}" alt="Logo da Empresa" height="70">
             </a>
-            <div class="ms-auto">
+            <div class="ms-auto center">
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link" href="entrada.html">Entradas</a>
+                        <a class="nav-link" href="{{ url_for('main.entrada') }}">Entradas</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="saida.html">Saídas</a>
+                        <a class="nav-link" href="{{ url_for('main.saida') }}">Saídas</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="estoque.html">Estoque</a>
+                        <a class="nav-link" href="{{ url_for('main.estoque') }}">Estoque</a>
                     </li>
                 </ul>
             </div>
@@ -41,13 +42,10 @@
                             <label class="form-label">Código do Produto</label>
                             <select class="form-select" id="cod_produto_embalagem" name="cod_produto_embalagem">
                                 <option selected>Selecione...</option>
-                                {% for produto in produtos %}
-                                <option value="{{ produto.cod_produto_embalagem }}">{{ produto.cod_produto_embalagem }} - {{ produto.nome_produto }}</option>
-                                {% endfor %}
                             </select>
                         </div>
                         <div class="col-md-8 mb-3">
-                            <label class="form-label">Nome do Produto</label>
+                            <label class="form-label">Descrição do Produto</label>
                             <input type="text" class="form-control" id="nomeProduto" readonly>
                         </div>
                     </div>
@@ -75,12 +73,21 @@
                     </div>
 
                     <div class="d-flex justify-content-center mt-5">
-                       <button type="submit" class="btn btn-sm me-2" style="background-color: rgb(0, 151, 100)" data-bs-theme="dark">Registrar Entrada</button>
+                       <button type="submit" class="btn btn-sm me-2" style="background-color: rgb(0, 151, 100)" data-bs-theme="dark">Registrar Saída</button>
                         <button type="button" class="btn btn-secondary btn-sm">Ver Registro Diário</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <!-- Passa os dados dos produtos do Flask (Python) para o JavaScript -->
+    <script>
+        const produtosData = {{ produtos | tojson }};
+    </script>
+    <script src="{{ url_for('static', filename='scripts/main.js') }}"></script>
 </body>
 </html>

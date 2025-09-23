@@ -11,6 +11,14 @@ class EstoqueEmbalagem(db.Model):
     unidade_medida = db.Column(db.String(10), nullable=False)
     padrao_embalagem = db.Column(db.String(255), nullable=False)
 
+    def to_dict(self):
+        return {
+            'cod_produto_embalagem': self.cod_produto_embalagem,
+            'nome_produto': self.nome_produto,
+            'unidade_medida': self.unidade_medida,
+            'padrao_embalagem': self.padrao_embalagem
+        }
+
 # ---
 
 # Modelo da tabela de entrada de embalagens
@@ -26,6 +34,17 @@ class EntradasEmbalagens(db.Model):
 
     produto = db.relationship('EstoqueEmbalagem', backref=db.backref('entradas', lazy=True))
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'cod_produto_embalagem': self.cod_produto_embalagem,
+            'nf': self.nf,
+            'quantidade_recebida': self.quantidade_recebida,
+            'responsavel_recebimento': self.responsavel_recebimento,
+            'total': self.total,
+            'data_recebimento': self.data_recebimento.isoformat()
+        }
+
 # Modelo da tabela de saída de embalagens
 class SaidasEmbalagem(db.Model):
     __tablename__ = 'saidas_embalagem'
@@ -37,3 +56,13 @@ class SaidasEmbalagem(db.Model):
     data_saida = db.Column(db.DateTime, default=datetime.now)
 
     produto = db.relationship('EstoqueEmbalagem', backref=db.backref('saidas', lazy=True))
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'cod_produto_embalagem': self.cod_produto_embalagem,
+            'op': self.op,
+            'quantidade_saida': self.quantidade_saida,
+            'responsavel_saida': self.responsavel_saida,
+            'data_saida': self.data_saida.isoformat()
+        }
