@@ -2,20 +2,26 @@ import os
 from flask import Flask
 from .config import Config
 from .models import db
-from .routes import bp as main_blueprint
+from flask_migrate import Migrate
+from flask_mail import Mail
+
+# Declara a variável 'mail' no escopo global
+mail = Mail()
 
 def create_app():
-    app = Flask(__name__, instance_relative_config=True)  # Load configuration from the Config object
-    
+    app = Flask(__name__, instance_relative_config=True)
     app.config.from_object(Config)
 
-    # Initialize the database with the app
     db.init_app(app)
+    migrate = Migrate(app, db)
+    
+    # Inicializa a extensão Flask-Mail com o aplicativo
+    mail.init_app(app)
 
-    # Register the main blueprint for routes
+    # Importa e registra o blueprint APÓS a inicialização das extensões
+    from .routes import bp as main_blueprint
     app.register_blueprint(main_blueprint)
 
-    # Ensure the instance folder exists for configurations
     try:
         os.makedirs(app.instance_path)
     except OSError:

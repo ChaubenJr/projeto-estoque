@@ -11,9 +11,9 @@
 <body>
     <nav class="navbar navbar-expand-lg " style="background-color: rgb(2, 33, 56);" data-bs-theme="dark">
         <div class="container-fluid">
-             <a class="navbar-brand" href="{{ url_for('main.index') }}">
+            <a class="navbar-brand" href="{{ url_for('main.index') }}">
                 <img src="{{ url_for('static', filename='img/Logo ITP.png') }}" alt="Logo da Empresa" height="70">
-             </a>
+            </a>
             <div class="ms-auto center">
                 <ul class="navbar-nav">
                     <li class="nav-item">
@@ -30,13 +30,30 @@
         </div>
     </nav>
 
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1050; width: 90%; max-width: 600px;">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
     <div class="container mt-5 mb-5">
         <div class="card shadow text-white" style="background-color:rgb(2, 33, 56);">
             <div class="card-body">
                 <h4 class="card-title text-center">Estoque de Embalagens</h4>
+                {% if data_local %}
+                    <p class="text-center">Última atualização: {{ data_local.strftime('%d/%m/%Y %H:%M:%S') }}</p>
+                {% endif %}
             </div>
+            
             <div class="table-responsive">
-                <table class="table">
+                <table class="table text-white">
                     <thead>
                         <tr>
                             <th>Código</th>
@@ -45,11 +62,11 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for item in estoque_total %}
+                        {% for i in estoque_total_embalagens %}
                         <tr>
-                            <td>{{ item[0] }}</td>
-                            <td>{{ item[1] }}</td>
-                            <td>{{ item[2] }}</td>
+                            <td>{{ i[0] }}</td>
+                            <td>{{ i[1] }}</td>
+                            <td>{{ i[2] }}</td>
                         </tr>
                         {% else %}
                         <tr>
@@ -59,12 +76,31 @@
                     </tbody>
                 </table>
             </div>
-            
-            <a href="mailto:chaubenjunior@gmail.com" class="d-flex justify-content-center mb-3 me-3">
-                <input type="button" value="enviar estoque">
-            </a>
+
+            <div class="d-flex justify-content-center mb-3">
+                <form action="{{ url_for('main.enviar_estoque_tudo') }}" method="post">
+                    <button type="submit" class="btn btn-sm me-2" style="background-color: rgb(0, 151, 100)" data-bs-theme="dark">
+                        Enviar Relatórios
+                    </button>
+                </form>
+            </div>
+
+            </div>
         </div>
     </div>
-
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    const bootstrapAlert = new bootstrap.Alert(alert);
+                    bootstrapAlert.close();
+                }, 5000); // 5000ms = 5 segundos
+            });
+        });
+    </script>
 </body>
 </html>
