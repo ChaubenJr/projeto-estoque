@@ -1,27 +1,60 @@
+# Mantenha todas as suas importações originais
 from flask import request, jsonify, Blueprint, render_template, redirect, url_for, flash
 from datetime import datetime
 from .models import db, EstoqueEmbalagem, EntradasEmbalagens, SaidasEmbalagem
 
 bp = Blueprint("main", __name__)
- 
+
+# --- SEM ALTERAÇÕES AQUI ---
 @bp.route("/")
 def index():
     return redirect(url_for("main.entrada"))
- 
+
+# --- ALTERAÇÃO AQUI ---
 @bp.route("/entrada")
 def entrada():
-    produtos = EstoqueEmbalagem.query.all()
-    return render_template("entrada.html", produtos=produtos)
- 
+    # 1. Busca os produtos do banco de dados (como objetos)
+    produtos_objetos = EstoqueEmbalagem.query.all()
+    
+    # 2. Converte a lista de objetos em uma lista de dicionários
+    #    Isso cria uma estrutura de dados limpa para o JavaScript
+    produtos_para_template = [
+        {
+            "cod_produto_embalagem": p.cod_produto_embalagem,
+            "nome_produto": p.nome_produto,
+            "padrao_embalagem": p.padrao_embalagem, # Supondo que seu modelo tenha esses campos
+            "unidade_medida": p.unidade_medida    # Supondo que seu modelo tenha esses campos
+        }
+        for p in produtos_objetos
+    ]
+    
+    # 3. Passa a lista de dicionários para o template
+    return render_template("entrada.html", produtos_para_template=produtos_para_template)
+
+# --- ALTERAÇÃO AQUI ---
 @bp.route("/saida")
 def saida():
-    produtos = EstoqueEmbalagem.query.all()
-    return render_template("saida.html", produtos=produtos)
- 
+    # 1. Busca os produtos do banco de dados (como objetos)
+    produtos_objetos = EstoqueEmbalagem.query.all()
+    
+    # 2. Converte a lista de objetos em uma lista de dicionários (mesma lógica da entrada)
+    produtos_para_template = [
+        {
+            "cod_produto_embalagem": p.cod_produto_embalagem,
+            "nome_produto": p.nome_produto,
+            "padrao_embalagem": p.padrao_embalagem,
+            "unidade_medida": p.unidade_medida
+        }
+        for p in produtos_objetos
+    ]
+
+    # 3. Passa a lista de dicionários para o template
+    return render_template("saida.html", produtos_para_template=produtos_para_template)
+
+# --- SEM ALTERAÇÕES AQUI ---
 @bp.route("/estoque")
 def estoque():
-    # Consulta a VIEW que criamos para obter o estoque total
-    # (Supondo que você criou um modelo para a view)
+    # Seu código de consulta complexa permanece o mesmo
     estoque_total = db.session.query(
         EstoqueEmbalagem.cod_produto_embalagem,
         EstoqueEmbalagem.nome_produto,
@@ -40,10 +73,10 @@ def estoque():
     
     return render_template("estoque.html", estoque_total=estoque_total)
 
+# --- SEM ALTERAÇÕES AQUI ---
 @bp.route("/entrada_embalagem", methods=["POST"])
 def entrada_embalagem():
     try:
-        # Coleta os dados do formulário
         cod_produto = request.form.get("cod_produto_embalagem")
         nf = request.form.get("nf")
         quantidade_recebida = int(request.form.get("quantidade_recebida") or 0)
@@ -53,13 +86,11 @@ def entrada_embalagem():
 
         data_recebimento = datetime.strptime(data_recebimento_str, '%Y-%m-%d') if data_recebimento_str else datetime.now()
         
-        # Valida se o produto existe
         produto = EstoqueEmbalagem.query.get(cod_produto)
         if not produto:
             flash("Erro: Código de produto não encontrado.", "error")
             return redirect(url_for("main.entrada"))
 
-        # Cria um novo registro de entrada
         nova_entrada = EntradasEmbalagens(
             cod_produto_embalagem=cod_produto,
             nf=nf,
@@ -68,27 +99,26 @@ def entrada_embalagem():
             data_recebimento=data_recebimento,
             total=total,
         )
- 
+
         db.session.add(nova_entrada)
         db.session.commit()
         flash("Entrada de embalagem registrada com sucesso!", "success")
- 
+
     except (ValueError, TypeError) as e:
         flash(f"Erro ao processar o formulário: {e}", "error")
     
     return redirect(url_for("main.entrada"))
 
+# --- SEM ALTERAÇÕES AQUI ---
 @bp.route("/saida_embalagem", methods=["POST"])
 def saida_embalagem():
     try:
-        # Coleta os dados do formulário de saída
         cod_produto = request.form.get("cod_produto_embalagem")
         op = request.form.get("op")
         quantidade_saida = int(request.form.get("quantidade_saida") or 0)
         responsavel = request.form.get("responsavel_saida")
         data_saida_str = request.form.get("data_saida")
 
-        # Valida se o produto existe
         produto = EstoqueEmbalagem.query.get(cod_produto)
         if not produto:
             flash("Erro: Código de produto não encontrado.", "error")
@@ -96,7 +126,6 @@ def saida_embalagem():
 
         data_saida = datetime.strptime(data_saida_str, '%Y-%m-%d') if data_saida_str else datetime.now()
 
-        # Cria um novo registro de saída
         nova_saida = SaidasEmbalagem(
             cod_produto_embalagem=cod_produto,
             op=op,
@@ -104,12 +133,12 @@ def saida_embalagem():
             responsavel_saida=responsavel,
             data_saida=data_saida
         )
- 
+
         db.session.add(nova_saida)
         db.session.commit()
         flash("Saída de embalagem registrada com sucesso!", "success")
 
     except (ValueError, TypeError) as e:
         flash(f"Erro ao processar o formulário: {e}", "error")
- 
+
     return redirect(url_for("main.saida"))
