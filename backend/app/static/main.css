@@ -1,5 +1,125 @@
+body {
+    font-family: 'Poppins', sans-serif;
+}
+
 .examplo-da-classe {
     background-color:rgb(2, 33, 56);
+}
+
+.fundo-imagem {
+    /* Define a imagem de fundo */
+    background-image: url('./img/background.jpg'); /* <-- Verifique o nome do arquivo aqui */
+
+    /* Garante que a imagem cubra toda a área da div */
+    background-size: cover;
+
+    /* Centraliza a imagem */
+    background-position: center center;
+
+    /* Impede que a imagem se repita */
+    background-repeat: no-repeat;
+}
+
+.navbar-custom {
+    /* Cor de fundo com transparência */
+    background: rgba(2, 33, 56, 0.7);
+
+    /* O efeito de desfoque */
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+
+    /* Borda sutil */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+
+    /* Cantos arredondados */
+    border-radius: 1rem;
+
+    /* Espaçamento interno */
+    padding: 0.5rem 1rem; /* Adicionado padding vertical */
+}
+
+.navbar-custom .navbar-nav .nav-link.active {
+    position: relative; /* Necessário para o pseudo-elemento ::after */
+    color: #ffffff !important; /* Garante que o texto fique branco */
+}
+
+/* Cria a linha embaixo do link ativo */
+.navbar-custom .navbar-nav .nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: 4px; /* Distância da linha para o texto */
+    left: 10%; /* Onde a linha começa */
+    width: 80%; /* Largura da linha */
+    height: 2px;
+    background-color: #ffffff; /* Cor da linha */
+    border-radius: 2px;
+}
+
+/* --- AJUSTES FINOS NA NAVBAR --- */
+
+/* 3. Aumenta o espaçamento ENTRE os links do menu */
+.navbar-custom .nav-link {
+    padding-left: 1.5rpm;  /* Aumenta o espaço à esquerda de cada link */
+    padding-right: 1.5rpm; /* Aumenta o espaço à direita de cada link */
+}
+
+/* Aumenta o arredondamento do menu da navbar */
+.navbar-custom {
+    /* ... seus outros estilos de vidro fosco ... */
+    border-radius: 1.5rem; /* Aumentado de 1rem para 1.5rem (aprox 24px) */
+}
+
+/* Nova classe para o card principal, para manter a consistência */
+.main-card {
+    background-color: rgba(2, 33, 56, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.1); /* Borda sutil como a da navbar */
+    border-radius: 1.5rem; /* Mesmo valor da navbar para harmonia */
+}
+
+/* Efeito para os links da navbar e botões */
+.nav-link, .btn {
+    transition: all 0.3s ease; /* Animação suave */
+}
+
+.nav-link:hover, .btn:hover {
+    transform: scale(1.05); /* Aumenta um pouco o tamanho */
+    opacity: 0.9; /* Deixa um pouco mais claro */
+}
+
+/* --- ESTILO CUSTOMIZADO PARA A TABELA DE ESTOQUE --- */
+
+/* --- ESTILO CUSTOMIZADO PARA A TABELA DE ESTOQUE --- */
+
+.table-custom {
+    /* Remove a cor de fundo padrão da tabela */
+    --bs-table-bg: transparent; 
+    --bs-table-striped-bg: transparent;
+    
+    /* Cor do texto principal da tabela */
+    color: #ffffff; 
+}
+
+/* Estilo para o cabeçalho da tabela */
+.table-custom thead th {
+    color: #ffffff;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.3); /* Linha mais forte no cabeçalho */
+}
+
+/* Estilo para as linhas do corpo da tabela */
+.table-custom tbody tr {
+    /* Bordas sutis e semi-transparentes para separar as linhas */
+    border-color: rgba(255, 255, 255, 0.15); 
+}
+
+/* Efeito ao passar o mouse por cima de uma linha */
+.table-custom tbody tr:hover {
+    /* Fundo branco semi-transparente para destacar a linha selecionada */
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #ffffff; /* Garante que o texto fique branco e nítido */
+}
+
+.table-custom, .table-custom th, .table-custom td {
+    color: #ffffff !important;
 }
 
 .select2-container .select2-selection--single {
