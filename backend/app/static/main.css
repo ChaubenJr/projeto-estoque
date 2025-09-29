@@ -1,178 +1,365 @@
+/* --- ESTILOS GERAIS E FONTES --- */
 body {
     font-family: 'Poppins', sans-serif;
 }
 
-.examplo-da-classe {
-    background-color:rgb(2, 33, 56);
-}
-
 .fundo-imagem {
-    /* Define a imagem de fundo */
-    background-image: url('./img/background.jpg'); /* <-- Verifique o nome do arquivo aqui */
-
-    /* Garante que a imagem cubra toda a área da div */
+    background-image: url('./img/background.jpg');
     background-size: cover;
-
-    /* Centraliza a imagem */
     background-position: center center;
-
-    /* Impede que a imagem se repita */
+    background-attachment: fixed;
     background-repeat: no-repeat;
 }
 
-.navbar-custom {
-    /* Cor de fundo com transparência */
-    background: rgba(2, 33, 56, 0.7);
+.fundo-imagem::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: -1;
+}
 
-    /* O efeito de desfoque */
+/* --- LAYOUT PRINCIPAL --- */
+.main-container {
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 94px);
+    justify-content: center;
+}
+
+.main-card {
+    background-color: rgba(2, 33, 56, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1.5rem;
+}
+
+.main-card-header {
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* --- NAVBAR CUSTOMIZADA --- */
+.navbar-custom {
+    background: rgba(2, 33, 56, 0.7);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-
-    /* Borda sutil */
     border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1.5rem;
+    padding: 0.5rem 1rem;
+}
 
-    /* Cantos arredondados */
-    border-radius: 1rem;
-
-    /* Espaçamento interno */
-    padding: 0.5rem 1rem; /* Adicionado padding vertical */
+.navbar-custom .nav-link {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
 }
 
 .navbar-custom .navbar-nav .nav-link.active {
-    position: relative; /* Necessário para o pseudo-elemento ::after */
-    color: #ffffff !important; /* Garante que o texto fique branco */
+    position: relative;
+    color: #ffffff !important;
 }
 
-/* Cria a linha embaixo do link ativo */
 .navbar-custom .navbar-nav .nav-link.active::after {
     content: '';
     position: absolute;
-    bottom: 4px; /* Distância da linha para o texto */
-    left: 10%; /* Onde a linha começa */
-    width: 80%; /* Largura da linha */
+    bottom: 4px;
+    left: 10%;
+    width: 80%;
     height: 2px;
-    background-color: #ffffff; /* Cor da linha */
+    background-color: #ffffff;
     border-radius: 2px;
 }
 
-/* --- AJUSTES FINOS NA NAVBAR --- */
-
-/* 3. Aumenta o espaçamento ENTRE os links do menu */
-.navbar-custom .nav-link {
-    padding-left: 1.5rpm;  /* Aumenta o espaço à esquerda de cada link */
-    padding-right: 1.5rpm; /* Aumenta o espaço à direita de cada link */
-}
-
-/* Aumenta o arredondamento do menu da navbar */
-.navbar-custom {
-    /* ... seus outros estilos de vidro fosco ... */
-    border-radius: 1.5rem; /* Aumentado de 1rem para 1.5rem (aprox 24px) */
-}
-
-/* Nova classe para o card principal, para manter a consistência */
-.main-card {
-    background-color: rgba(2, 33, 56, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.1); /* Borda sutil como a da navbar */
-    border-radius: 1.5rem; /* Mesmo valor da navbar para harmonia */
-}
-
-/* Efeito para os links da navbar e botões */
-.nav-link, .btn {
-    transition: all 0.3s ease; /* Animação suave */
-}
-
-.nav-link:hover, .btn:hover {
-    transform: scale(1.05); /* Aumenta um pouco o tamanho */
-    opacity: 0.9; /* Deixa um pouco mais claro */
-}
-
-/* --- ESTILO CUSTOMIZADO PARA A TABELA DE ESTOQUE --- */
-
-/* --- ESTILO CUSTOMIZADO PARA A TABELA DE ESTOQUE --- */
-
-.table-custom {
-    /* Remove a cor de fundo padrão da tabela */
-    --bs-table-bg: transparent; 
-    --bs-table-striped-bg: transparent;
-    
-    /* Cor do texto principal da tabela */
-    color: #ffffff; 
-}
-
-/* Estilo para o cabeçalho da tabela */
-.table-custom thead th {
+/* --- TIPOGRAFIA E ESTILOS DE FORMULÁRIO --- */
+.main-card h2 {
+    font-weight: 700;
+    letter-spacing: 0.5px;
     color: #ffffff;
-    border-bottom: 2px solid rgba(255, 255, 255, 0.3); /* Linha mais forte no cabeçalho */
 }
 
-/* Estilo para as linhas do corpo da tabela */
-.table-custom tbody tr {
-    /* Bordas sutis e semi-transparentes para separar as linhas */
-    border-color: rgba(255, 255, 255, 0.15); 
+.main-card .form-label {
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.9rem;
 }
 
-/* Efeito ao passar o mouse por cima de uma linha */
-.table-custom tbody tr:hover {
-    /* Fundo branco semi-transparente para destacar a linha selecionada */
+.main-card .form-control {
     background-color: rgba(255, 255, 255, 0.1);
-    color: #ffffff; /* Garante que o texto fique branco e nítido */
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.main-card .form-control::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.main-card .form-control:focus {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-color: rgba(0, 151, 100, 0.5);
+    box-shadow: 0 0 15px rgba(0, 151, 100, 0.3);
+    outline: none;
+}
+
+/* --- BOTÕES CUSTOMIZADOS E EFEITOS --- */
+.nav-link, .btn {
+    transition: all 0.3s ease;
+}
+
+.btn-custom-primary {
+    background-image: linear-gradient(45deg, #009764 0%, #00b377 100%);
+    color: #ffffff;
+    border: none;
+    font-weight: 500;
+    padding: 0.5rem 1.5rem;
+    border-radius: 50px;
+}
+
+.btn-custom-secondary {
+    background-color: transparent;
+    color: #ffffff;
+    border: 1px solid #ffffff;
+    font-weight: 500;
+    padding: 0.5rem 1.5rem;
+    border-radius: 50px;
+}
+
+.btn-custom-primary:hover, .btn-custom-secondary:hover {
+    transform: translateY(-3px);
+}
+
+.btn-custom-primary:hover {
+    box-shadow: 0 6px 20px rgba(0, 151, 100, 0.4);
+}
+
+.btn-custom-secondary:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 6px 20px rgba(255, 255, 255, 0.15);
+}
+
+/* --- TABELA CUSTOMIZADA --- */
+.table-custom {
+    --bs-table-bg: transparent;
+    --bs-table-striped-bg: transparent;
 }
 
 .table-custom, .table-custom th, .table-custom td {
     color: #ffffff !important;
 }
 
-.select2-container .select2-selection--single {
-  height: 38px; /* mesma altura do .form-control do Bootstrap */
-  padding: .375rem .75rem;
-  font-size: 1rem;
-  line-height: 1.5;
+.table-custom th, .table-custom td {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    vertical-align: middle;
 }
 
-.select2-container .select2-selection__rendered {
-  line-height: calc(2.5rem); /* centraliza o texto */
+.table-custom thead th {
+    border-bottom: 2px solid rgba(255, 255, 255, 0.3);
 }
 
-.select2-container .select2-selection__arrow {
-  height: calc(2.5rem);
+.table-custom tbody tr {
+    border-color: rgba(255, 255, 255, 0.15);
 }
 
-/* --- LÓGICA DA SETA BOOTSTRAP ANIMADA --- */
+.table-custom tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.stock-zero {
+    color: #ffc107;
+    font-weight: 700;
+}
+
+.stock-low {
+    color: #ff7b07;
+    font-weight: 500;
+}
+
+/* --- ESTILOS SELECT2 PARA TEMA ESCURO --- */
 .select2-container--default .select2-selection--single {
-        background-image: none !important;
-    }
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    height: 38px !important;
+    border-radius: 0.375rem !important;
+    position: relative;
+    display: flex !important;
+    align-items: center !important;
+}
 
-/* 1. Esconde a seta ORIGINAL do Select2, pois não vamos usá-la. */
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #ffffff !important;
+    line-height: normal !important;
+    padding-left: 12px !important;
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
 .select2-container--default .select2-selection--single .select2-selection__arrow b {
-    display: none;
+    display: none !important;
 }
 
-/* 2. Prepara o campo para posicionar a nossa nova seta "virtual". */
-.select2-container--default .select2-selection--single {
-    position: relative; /* Essencial para o posicionamento do ::after */
-}
-
-/* 3. Cria a nossa seta "virtual" usando o ::after. */
 .select2-container--default .select2-selection--single::after {
-    content: ''; /* Obrigatório para pseudo-elementos */
-    position: absolute; /* Permite posicionar livremente */
+    content: '';
+    position: absolute;
     top: 50%;
     right: 15px;
-    margin-top: -6px; /* Metade da altura para centralizar verticalmente */
-    
-    /* Pega a imagem da seta do Bootstrap */
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+    margin-top: -6px;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
     background-repeat: no-repeat;
     background-size: 16px 12px;
     height: 12px;
     width: 16px;
-
-    /* A MÁGICA DA ANIMAÇÃO */
     transition: transform 0.3s ease;
 }
 
-/* 4. Gira a nossa seta "virtual" quando o menu está aberto. */
 .select2-container--default.select2-container--open .select2-selection--single::after {
     transform: rotate(180deg);
 }
 
+.select2-dropdown {
+    background-color: #0d2a44 !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 0.5rem;
+}
+
+.select2-container--default .select2-search--dropdown .select2-search__field {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: #ffffff !important;
+}
+
+.select2-results__option {
+    color: rgba(255, 255, 255, 0.8) !important;
+    background-color: transparent !important;
+}
+
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background-color: #00e092 !important;
+    color: black !important;
+}
+
+.select2-container--default .select2-results__option[aria-selected="true"] {
+    background-color: rgba(0, 151, 100, 0.3) !important;
+    color: #ffffff !important;
+}
+
+
+/* --- CORREÇÃO FINAL: Setas de input[type="number"] VISÍVEIS e com fundo transparente --- */
+
+/* Esconde as setas padrão no Firefox, pois não são estilizadas da mesma forma */
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+/* Estiliza as setas para Webkit (Chrome, Safari, Edge) */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    /* MANTÉM AS SETAS VISÍVEIS (removido -webkit-appearance: none;) */
+    
+    /* Tenta deixar o fundo transparente (pode não remover 100% da área escura do navegador) */
+    background: transparent;
+    
+    /* Deixa as SETAS brancas para contrastar com o fundo escuro */
+    filter: invert(1);
+
+    /* Opacidade para um visual mais suave */
+    opacity: 0.7;
+
+    /* Adiciona um pequeno espaçamento da borda direita */
+    margin-right: 2px;
+    
+    transition: opacity 0.2s ease;
+}
+
+/* Aumenta a visibilidade das setas no hover do input */
+input[type="number"]:hover::-webkit-inner-spin-button,
+input[type="number"]:hover::-webkit-outer-spin-button {
+    opacity: 1;
+}
+
+/* --- SOLUÇÃO DEFINITIVA: Setas customizadas para input[type="number"] --- */
+
+/* 1. O contêiner que envolve o input e as setas */
+.number-input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+/* 2. Removemos COMPLETAMENTE as setas nativas */
+.number-input-wrapper input[type="number"] {
+    -moz-appearance: textfield; /* Para Firefox */
+}
+.number-input-wrapper input[type="number"]::-webkit-inner-spin-button,
+.number-input-wrapper input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* 3. Contêiner para nossas setas customizadas */
+.number-input-arrows {
+    position: absolute;
+    right: 10px;
+    top: 1px;
+    bottom: 1px;
+    width: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none; /* Permite clicar através dele no input */
+}
+
+/* 4. Estilização de cada seta (criadas com bordas) */
+.number-input-arrows span {
+    display: block;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    cursor: pointer;
+    pointer-events: all; /* Torna apenas as setas clicáveis */
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.number-input-arrows span:hover {
+    opacity: 1;
+}
+
+/* Seta para cima */
+.arrow-up {
+    border-width: 0 5px 6px 5px;
+    border-color: transparent transparent #ffffff transparent;
+    margin-bottom: 5px;
+}
+
+/* Seta para baixo */
+.arrow-down {
+    border-width: 6px 5px 0 5px;
+    border-color: #ffffff transparent transparent transparent;
+}
+
+/* --- CORREÇÃO: Ícone do calendário branco em input[type="date"] --- */
+
+/* Altera a cor do ícone padrão do calendário para branco */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    /* A mágica acontece aqui: inverte a cor do ícone (preto vira branco) */
+    filter: invert(1);
+    
+    /* Deixa o ícone um pouco sutil, mas visível */
+    opacity: 0.8;
+    
+    /* Adiciona um efeito suave de transição */
+    transition: opacity 0.2s ease;
+    
+    /* Muda o cursor para indicar que é clicável */
+    cursor: pointer;
+}
+
+/* Aumenta a opacidade do ícone quando o mouse está sobre ele */
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+}
