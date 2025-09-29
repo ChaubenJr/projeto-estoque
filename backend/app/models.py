@@ -17,6 +17,9 @@ class EstoqueEmbalagem(db.Model):
     nome_produto = db.Column(db.String(255), nullable=False)
     unidade_medida = db.Column(db.String(10), nullable=False)
     padrao_embalagem = db.Column(db.String(255), nullable=False)
+    estoque_min = db.Column(db.Integer, default=0, nullable=True)
+    estoque_max = db.Column(db.Integer, default=0, nullable=True)
+
     
     # Define as relações com as tabelas de entrada e saída, permitindo consultas fáceis.
     # O 'backref' cria uma propriedade 'produto' nas classes EntradasEmbalagens e SaidasEmbalagem.
