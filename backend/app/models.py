@@ -10,6 +10,8 @@ class EstoqueEmbalagem(db.Model):
     nome_produto = db.Column(db.String(255), nullable=False)
     unidade_medida = db.Column(db.String(10), nullable=False)
     padrao_embalagem = db.Column(db.String(255), nullable=False)
+    estoque_min = db.Column(db.Integer, default=0, nullable=True)
+    estoque_max = db.Column(db.Integer, default=0, nullable=True)
     
     entradas = db.relationship('EntradasEmbalagens', backref='produto', lazy=True)
     saidas = db.relationship('SaidasEmbalagem', backref='produto', lazy=True)
