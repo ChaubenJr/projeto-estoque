@@ -9,19 +9,16 @@ $(document).ready(function() {
         return {
             id: produto.cod_produto_embalagem,
             text: produto.cod_produto_embalagem,
-            nome: produto.nome_produto,
-            padrao: produto.padrao_embalagem,
-            unidade: produto.unidade_medida
+            // Guardamos apenas o 'nome' pois é o único campo a preencher
+            nome: produto.nome_produto
         };
     });
 
-    // ✅ --- A CORREÇÃO ESTÁ AQUI --- ✅
-    // Adiciona um objeto vazio no início do array.
-    // Este objeto funcionará como o nosso placeholder.
+    // Adiciona um objeto vazio no início do array para o placeholder.
     produtosParaSelect.unshift({ id: '', text: '' });
 
 
-    // --- INICIALIZAÇÃO CORRETA E COMPLETA DO SELECT2 ---
+    // --- INICIALIZAÇÃO COMPLETA DO SELECT2 (com todo o nosso estilo) ---
     selectProduto.select2({
         data: produtosParaSelect,
         placeholder: 'Selecione ou digite um código...',
@@ -37,23 +34,16 @@ $(document).ready(function() {
         
         if (data && data.id) {
             $('#nomeProduto').val(data.nome);
-            $('#padraoProduto').val(data.padrao);
-            $('#und').val(data.unidade);
         }
     });
 
-    // Limpa os campos quando o usuário clica no "x" do placeholder.
+    // Limpa o campo de descrição quando o usuário clica no "x".
     selectProduto.on('select2:clear', function (e) {
-        // Precisamos limpar o valor do select também
         $(this).val(null).trigger('change');
-
-        // E limpar os outros campos
         $('#nomeProduto').val('');
-        $('#padraoProduto').val('');
-        $('#und').val('');
     });
 
-    // Força o placeholder a ser selecionado no carregamento inicial
+    // Força o placeholder a ser selecionado no carregamento inicial.
     selectProduto.val(null).trigger('change');
 
 });

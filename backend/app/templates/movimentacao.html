@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}Movimentações{% endblock %}
+
+{% block page_title %}Movimentações{% endblock %}
+
+{% block content %}
+    <div class="card shadow-sm">
+        
+        <div class="card-header">
+            <form action="{{ url_for('main.movimentacao') }}" method="GET">
+                <div class="row g-3 align-items-center">
+                    <div class="col-md-3">
+                        <input type="text" class="form-control" name="filtro_codigo" placeholder="Filtrar por Código..." value="{{ filtro_codigo or '' }}">
+                    </div>
+                    <div class="col-md-2">
+                        <input type="text" class="form-control" name="filtro_nf" placeholder="Filtrar por NF..." value="{{ filtro_nf or '' }}">
+                    </div>
+                    <div class="col-md-2">
+                        <input type="text" class="form-control" name="filtro_op" placeholder="Filtrar por OP..." value="{{ filtro_op or '' }}">
+                    </div>
+                    <div class="col-md-2">
+                        <input type="date" class="form-control" name="filtro_data" value="{{ filtro_data or '' }}">
+                    </div>
+                    <div class="col-md-3 d-flex justify-content-end" style="gap: 0.75rem;">
+                        <button type="submit" class="btn btn-custom-primary">
+                            <i class="bi bi-funnel-fill"></i> Filtrar
+                        </button>
+                        <a href="{{ url_for('main.movimentacao') }}" class="btn btn-custom-secondary">
+                            <i class="bi bi-arrow-counterclockwise"></i> Limpar
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Hora</th>
+                            <th>Código</th>
+                            <th>Descrição</th>
+                            <th>NF</th>
+                            <th>OP</th>
+                            <th class="text-end">Entrada</th>
+                            <th class="text-end">Saída</th>
+                            <th class="text-end">Saldo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for mov in movimentacoes %}
+                        <tr>
+                            <td>{{ mov.data }}</td>
+                            <td>{{ mov.hora }}</td>
+                            <td>{{ mov.codigo }}</td>
+                            <td>{{ mov.descricao }}</td>
+                            <td>{{ mov.nf }}</td>
+                            <td>{{ mov.op }}</td>
+                            <td class="text-end mov-entrada">{{ mov.entrada }}</td>
+                            <td class="text-end mov-saida">{{ mov.saida }}</td>
+                            <td class="text-end {% if mov.saldo < 0 %}mov-saldo-negativo{% endif %}">{{ mov.saldo }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="9" class="text-center py-4">Nenhuma movimentação encontrada.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}
