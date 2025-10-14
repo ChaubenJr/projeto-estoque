@@ -56,4 +56,20 @@ $(document).ready(function() {
     // Força o placeholder a ser selecionado no carregamento inicial
     selectProduto.val(null).trigger('change');
 
+    $('#hora_recebimento').on('focus', function() {
+            const campoHora = $(this);
+
+            // Apenas preenche se o campo estiver vazio,
+            // para não sobrescrever um valor digitado pelo usuário.
+            if (campoHora.val() === '') {
+                const dataAtual = new Date();
+
+                // Pega a hora e os minutos e formata para ter sempre dois dígitos
+                const horas = String(dataAtual.getHours()).padStart(2, '0');
+                const minutos = String(dataAtual.getMinutes()).padStart(2, '0');
+
+                // Define o valor do campo com a hora formatada (HH:MM)
+                campoHora.val(`${horas}:${minutos}`);
+            }
+    });
 });
