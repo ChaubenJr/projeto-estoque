@@ -1,177 +1,305 @@
+/* --- ESTILOS GERAIS COM TEMA DE CARD ESCURO --- */
 body {
+    background-color: #f0f2f5; /* Fundo principal cinza claro */
     font-family: 'Poppins', sans-serif;
+    transition: margin-left 0.3s ease;
 }
 
-.examplo-da-classe {
-    background-color:rgb(2, 33, 56);
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 260px;
+    background-color: #022138; /* Azul escuro corporativo */
+    padding: 1.5rem 1rem;
+    color: white;
+    transition: width 0.3s ease;
+    overflow-x: hidden;
+    z-index: 1000;
 }
 
-.fundo-imagem {
-    /* Define a imagem de fundo */
-    background-image: url('./img/background.jpg'); /* <-- Verifique o nome do arquivo aqui */
-
-    /* Garante que a imagem cubra toda a área da div */
-    background-size: cover;
-
-    /* Centraliza a imagem */
-    background-position: center center;
-
-    /* Impede que a imagem se repita */
-    background-repeat: no-repeat;
+.main-content {
+    margin-left: 260px;
+    padding: 1.5rem;
+    transition: margin-left 0.3s ease;
 }
 
-.navbar-custom {
-    /* Cor de fundo com transparência */
-    background: rgba(2, 33, 56, 0.7);
-
-    /* O efeito de desfoque */
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-
-    /* Borda sutil */
-    border: 1px solid rgba(255, 255, 255, 0.1);
-
-    /* Cantos arredondados */
-    border-radius: 1rem;
-
-    /* Espaçamento interno */
-    padding: 0.5rem 1rem; /* Adicionado padding vertical */
+.sidebar-header {
+    text-align: center;
+    margin-bottom: 2rem;
 }
 
-.navbar-custom .navbar-nav .nav-link.active {
-    position: relative; /* Necessário para o pseudo-elemento ::after */
-    color: #ffffff !important; /* Garante que o texto fique branco */
+/* --- ESTILOS DA NAVBAR (SIDEBAR) --- */
+.sidebar .nav-link {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+.sidebar .nav-link i { font-size: 1.2rem; }
+
+/* EFEITO DE HOVER NO MENU */
+.sidebar .nav-link:hover {
+    background-color: #0a58ca; /* Azul mais claro para hover */
+    color: white;
+}
+.sidebar .nav-link.active {
+    background-color: #084298; /* Azul um pouco mais escuro para ativo */
+    color: white;
+    font-weight: 500;
 }
 
-/* Cria a linha embaixo do link ativo */
-.navbar-custom .navbar-nav .nav-link.active::after {
-    content: '';
-    position: absolute;
-    bottom: 4px; /* Distância da linha para o texto */
-    left: 10%; /* Onde a linha começa */
-    width: 80%; /* Largura da linha */
-    height: 2px;
-    background-color: #ffffff; /* Cor da linha */
-    border-radius: 2px;
-}
+/* --- ESTADO RECOLHIDO DO MENU --- */
+body.sidebar-collapsed .sidebar { width: 80px; }
+body.sidebar-collapsed .main-content { margin-left: 80px; }
+body.sidebar-collapsed .sidebar .nav-link span { display: none; }
+body.sidebar-collapsed .sidebar .nav-link { justify-content: center; }
+body.sidebar-collapsed .sidebar .nav-link i { margin-right: 0 !important; }
+body.sidebar-collapsed .sidebar-header .logo-full { display: none; }
+body.sidebar-collapsed .sidebar-header .logo-icon { display: inline-block !important; }
 
-/* --- AJUSTES FINOS NA NAVBAR --- */
-
-/* 3. Aumenta o espaçamento ENTRE os links do menu */
-.navbar-custom .nav-link {
-    padding-left: 1.5rpm;  /* Aumenta o espaço à esquerda de cada link */
-    padding-right: 1.5rpm; /* Aumenta o espaço à direita de cada link */
-}
-
-/* Aumenta o arredondamento do menu da navbar */
-.navbar-custom {
-    /* ... seus outros estilos de vidro fosco ... */
-    border-radius: 1.5rem; /* Aumentado de 1rem para 1.5rem (aprox 24px) */
-}
-
-/* Nova classe para o card principal, para manter a consistência */
-.main-card {
-    background-color: rgba(2, 33, 56, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.1); /* Borda sutil como a da navbar */
-    border-radius: 1.5rem; /* Mesmo valor da navbar para harmonia */
-}
-
-/* Efeito para os links da navbar e botões */
-.nav-link, .btn {
-    transition: all 0.3s ease; /* Animação suave */
-}
-
-.nav-link:hover, .btn:hover {
-    transform: scale(1.05); /* Aumenta um pouco o tamanho */
-    opacity: 0.9; /* Deixa um pouco mais claro */
-}
-
-/* --- ESTILO CUSTOMIZADO PARA A TABELA DE ESTOQUE --- */
-
-/* --- ESTILO CUSTOMIZADO PARA A TABELA DE ESTOQUE --- */
-
-.table-custom {
-    /* Remove a cor de fundo padrão da tabela */
-    --bs-table-bg: transparent; 
-    --bs-table-striped-bg: transparent;
-    
-    /* Cor do texto principal da tabela */
-    color: #ffffff; 
-}
-
-/* Estilo para o cabeçalho da tabela */
-.table-custom thead th {
+/* --- CABEÇALHO DA PÁGINA --- */
+.page-header {
+    display: flex;
+    align-items: center;
+    background-color: #022138;
     color: #ffffff;
-    border-bottom: 2px solid rgba(255, 255, 255, 0.3); /* Linha mais forte no cabeçalho */
+    padding: 1rem 1.5rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    margin-bottom: 1.5rem;
 }
-
-/* Estilo para as linhas do corpo da tabela */
-.table-custom tbody tr {
-    /* Bordas sutis e semi-transparentes para separar as linhas */
-    border-color: rgba(255, 255, 255, 0.15); 
-}
-
-/* Efeito ao passar o mouse por cima de uma linha */
-.table-custom tbody tr:hover {
-    /* Fundo branco semi-transparente para destacar a linha selecionada */
-    background-color: rgba(255, 255, 255, 0.1);
-    color: #ffffff; /* Garante que o texto fique branco e nítido */
-}
-
-.table-custom, .table-custom th, .table-custom td {
+.page-header h2, .page-header h4 {
     color: #ffffff !important;
 }
-
-.select2-container .select2-selection--single {
-  height: 38px; /* mesma altura do .form-control do Bootstrap */
-  padding: .375rem .75rem;
-  font-size: 1rem;
-  line-height: 1.5;
+.menu-toggle {
+    border: none;
+    background: transparent;
+    font-size: 1.5rem;
+    margin-right: 1rem;
+    color: #ffffff;
 }
 
-.select2-container .select2-selection__rendered {
-  line-height: calc(2.5rem); /* centraliza o texto */
+/* --- ESTILOS DOS CARDS (TEMA ESCURO) --- */
+.card {
+    border: none;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    background-color: #022138;
+    color: #ffffff;
+}
+.card-header {
+    background-color: transparent;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 1rem 1.5rem;
+}
+.card-header h2, .card-header h3, .card-header h4, .card-header h5 {
+    color: #ffffff;
+}
+.card-body {
+    padding: 1.5rem;
 }
 
-.select2-container .select2-selection__arrow {
-  height: calc(2.5rem);
+/* --- FORMULÁRIOS (TEMA ESCURO) --- */
+.form-label {
+    color: rgba(255, 255, 255, 0.8);
+}
+.form-control, .form-select {
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+}
+.form-control::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+.form-control:focus, .form-select:focus {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: #198754;
+    box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
+    color: #ffffff;
+}
+.form-control[readonly] {
+    background-color: rgba(255, 255, 255, 0.02);
+    opacity: 0.7;
 }
 
-/* --- LÓGICA DA SETA BOOTSTRAP ANIMADA --- */
+/* --- BOTÕES (TEMA ESCURO) --- */
+.btn-custom-primary {
+    background-color: #0d6efd;
+    color: #ffffff;
+    border: none;
+    font-weight: 500;
+    padding: 0.6rem 1.5rem;
+    border-radius: 50px;
+    transition: all 0.3s ease;
+}
+.btn-custom-primary:hover {
+    background-color: #0b5ed7;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(13, 110, 253, 0.4);
+}
+.btn-custom-secondary {
+    background-color: #198754;
+    color: #ffffff;
+    border: none;
+    font-weight: 500;
+    padding: 0.6rem 1.5rem;
+    border-radius: 50px;
+    transition: all 0.3s ease;
+}
+.btn-custom-secondary:hover {
+    background-color: #157347;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(25, 135, 84, 0.4);
+}
+
+/* --- ESTILIZAÇÃO DO SELECT2 PARA TEMA ESCURO --- */
 .select2-container--default .select2-selection--single {
-        background-image: none !important;
-    }
-
-/* 1. Esconde a seta ORIGINAL do Select2, pois não vamos usá-la. */
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 0.375rem;
+    height: 38px;
+    display: flex;
+    align-items: center;
+}
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #ffffff;
+    padding-left: 12px;
+    padding-right: 20px;
+}
+.select2-container--default .select2-selection--single .select2-selection__placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
 .select2-container--default .select2-selection--single .select2-selection__arrow b {
-    display: none;
+    border-color: #fff transparent transparent transparent;
+    margin-top: 2px;
+}
+.select2-container--default.select2-container--focus .select2-selection--single {
+    border-color: #198754;
+    box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
+}
+.select2-container--open {
+    z-index: 9999 !important;
 }
 
-/* 2. Prepara o campo para posicionar a nossa nova seta "virtual". */
-.select2-container--default .select2-selection--single {
-    position: relative; /* Essencial para o posicionamento do ::after */
+/* --- ESTILIZAÇÃO DO DROPDOWN (A LISTA QUE ABRE) --- */
+.select2-dropdown {
+    background-color: #032e4c;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+.select2-search--dropdown .select2-search__field {
+    background-color: #2c3e50;
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+}
+.select2-search--dropdown .select2-search__field:focus {
+    outline: none;
+    border-color: #198754;
+}
+.select2-results__option {
+    color: #eee;
 }
 
-/* 3. Cria a nossa seta "virtual" usando o ::after. */
-.select2-container--default .select2-selection--single::after {
-    content: ''; /* Obrigatório para pseudo-elementos */
-    position: absolute; /* Permite posicionar livremente */
-    top: 50%;
-    right: 15px;
-    margin-top: -6px; /* Metade da altura para centralizar verticalmente */
-    
-    /* Pega a imagem da seta do Bootstrap */
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-size: 16px 12px;
-    height: 12px;
-    width: 16px;
-
-    /* A MÁGICA DA ANIMAÇÃO */
-    transition: transform 0.3s ease;
+/* --- AJUSTES FINAIS DE ESTILO PARA O SELECT2 --- */
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+.select2-container--default .select2-selection--single .select2-selection__clear {
+    float: none;
+    position: relative;
+    top: -1px;
+    color: #aaa;
+    font-size: 1.2rem;
+    margin-right: 10px;
+    transition: color 0.2s ease;
+}
+.select2-container--default .select2-selection--single .select2-selection__clear:hover {
+    color: #ffffff;
+}
+.select2-container--default.select2-container--allow-clear .select2-selection--single .select2-selection__rendered {
+    padding-left: 12px !important;
+    margin-left: 15px;
 }
 
-/* 4. Gira a nossa seta "virtual" quando o menu está aberto. */
-.select2-container--default.select2-container--open .select2-selection--single::after {
-    transform: rotate(180deg);
+/* --- BLOCO FINAL E CORRIGIDO PARA ESTILOS DA LISTA --- */
+/* PRIMEIRO: Definimos a cor do item que já está selecionado (cinza escuro) */
+.select2-container--default .select2-results__option[aria-selected=true],
+.select2-container--default .select2-results__option--selected {
+    background-color: #34495e !important; 
+    color: #aeb6bf !important;
+}
+/* SEGUNDO: Definimos a cor de destaque do mouse (verde), que deve ter a prioridade */
+.select2-container--default .select2-results__option--highlighted[aria-selected],
+.select2-container--default .select2-results__option--highlighted {
+    background-color: #198754 !important; 
+    color: white !important;
+}
+
+
+/* --- ESTILOS PARA A PÁGINA DE ESTOQUE (VERSÃO CORRIGIDA) --- */
+
+/* Garante que o fundo da tabela e as bordas fiquem corretos */
+.table > :not(caption) > * > * {
+    background-color: transparent;
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* ✅ CORREÇÃO 1: Garante que o texto padrão da tabela seja branco puro 
+    e o cabeçalho seja um branco mais sutil.
+*/
+.table, .table td {
+    color: #ffffff !important; 
+}
+.table thead th {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+
+/* ✅ CORREÇÃO 2: Define o fundo e a cor do texto no hover.
+    O texto agora ficará verde ao passar o mouse.
+*/
+.table-hover > tbody > tr:hover > * {
+    background-color: rgba(255, 255, 255, 0.07); /* Fundo sutil que já tínhamos */
+    color: #198754 !important; /* SEU VERDE */
+    font-weight: 500;
+}
+
+
+/* Estilos para os números da coluna "Estoque Atual" (mantidos) */
+.stock-low {
+    color: #fd7e14 !important;
+    font-weight: bold;
+}
+.stock-zero {
+    color: #ff5252 !important;
+    font-weight: bold;
+}
+
+/* --- ESTILOS PARA A PÁGINA DE MOVIMENTAÇÕES --- */
+
+/* Cor para números de ENTRADA (positivos) */
+.mov-entrada {
+    color: #28a745 !important; /* Verde Sucesso */
+    font-weight: 500;
+}
+
+/* Cor para números de SAÍDA */
+.mov-saida {
+    color: #fd7e14 !important; /* Laranja Alerta */
+    font-weight: 500;
+}
+
+/* Cor para SALDO NEGATIVO (vermelho forte) */
+.mov-saldo-negativo {
+    color: #ff5252 !important; /* Vermelho Perigo */
+    font-weight: bold;
 }

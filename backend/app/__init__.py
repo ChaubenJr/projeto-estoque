@@ -1,25 +1,44 @@
-
+# __init__.py
 import os
 from flask import Flask
-from .config import Config
-from .models import db
+# Importe o modelo Usuario para o user_loader
+from .models import db, Usuario 
 from flask_migrate import Migrate
 from flask_mail import Mail
+from flask_login import LoginManager # Importa o LoginManager
+from config import Config # Assumindo que você tem um arquivo config.py
 
-# Declara a variável 'mail' no escopo global
+# Declaração das extensões globais
 mail = Mail()
+login_manager = LoginManager() # Declaração do LoginManager
 
 def create_app():
+    # 1. Configuração básica do Flask
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_object(Config)
 
+    # Nota: Assumindo que a SECRET_KEY está em Config, se não, adicione:
+    # app.config['SECRET_KEY'] = 'SUA_CHAVE_SECRETA_AQUI' 
+
+    # 2. Inicialização do SQLAlchemy e Migrações
     db.init_app(app)
     migrate = Migrate(app, db)
     
-    # Inicializa a extensão Flask-Mail com o aplicativo
+    # 3. Inicialização do Flask-Mail
     mail.init_app(app)
 
-    # Importa e registra o blueprint APÓS a inicialização das extensões
+    # 4. Inicialização e Configuração do Flask-Login (A CORREÇÃO)
+    login_manager.init_app(app) # <-- ISTO ANEXA A PROPRIEDADE 'login_manager'
+    login_manager.login_view = 'main.login' # Endpoint do Blueprint para a tela de login
+    login_manager.login_message = "Por favor, faça login para acessar esta página."
+    login_manager.login_message_category = "danger"
+
+    # 5. Configuração do user_loader
+    @login_manager.user_loader
+    def load_user(user_id):
+        return Usuario.query.get(int(user_id))
+
+    # 6. Importa e registra o blueprint APÓS a inicialização das extensões
     from .routes import bp as main_blueprint
     app.register_blueprint(main_blueprint)
 

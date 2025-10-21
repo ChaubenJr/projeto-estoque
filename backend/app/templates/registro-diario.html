@@ -1,11 +1,80 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro Diário</title>
-</head>
-<body>
+{% extends 'base.html' %}
+
+{% block title %}Registro Diário de Entradas{% endblock %}
+
+{% block page_title %}Registro Diário de Entradas{% endblock %}
+
+{% block content %}
+    <div class="card shadow-sm">
+        
+        <div class="card-header">
+            <form method="GET" action="{{ url_for('main.registro_diario_entradas') }}">
+                <div class="row g-3 align-items-center">
+
+                    <div class="col-md-3">
+                        <label for="filtro_data" class="visually-hidden">Data</label>
+                        <input type="date" class="form-control" id="filtro_data" name="filtro_data" value="{{ data_iso or '' }}">
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label for="filtro_codigo" class="visually-hidden">Código do Produto</label>
+                        <input type="text" class="form-control" id="filtro_codigo" name="filtro_codigo" placeholder="Filtrar por Código..." value="{{ filtro_codigo or '' }}">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label for="filtro_nf" class="visually-hidden">Nota Fiscal</label>
+                        <input type="text" class="form-control" id="filtro_nf" name="filtro_nf" placeholder="Filtrar por NF..." value="{{ filtro_nf or '' }}">
+                    </div>
+
+                    <div class="col-md-3 d-flex justify-content-end" style="gap: 0.75rem;">
+                        <button type="submit" class="btn btn-custom-primary">
+                            <i class="bi bi-funnel-fill"></i> Filtrar
+                        </button>
+                        <a href="{{ url_for('main.registro_diario_entradas') }}" class="btn btn-custom-secondary">
+                            <i class="bi bi-arrow-counterclockwise"></i> Limpar
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
     
-</body>
-</html>
+        <div class="card-body">
+            <h5 class="card-subtitle mb-3" style="color: rgba(255,255,255,0.6);">
+                Exibindo registros de: {{ data_formatada }}
+            </h5>
+
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Descrição</th>
+                            <th>Nota Fiscal</th>
+                            <th>Pedido de Compra</th>
+                            <th class="text-end">Quantidade</th>
+                            <th>Responsável</th>
+                            <th class="text-end">Valor Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for registro in registros %}
+                        <tr>
+                            <td>{{ registro.cod_produto_embalagem }}</td>
+                            <td>{{ registro.nome_produto }}</td>
+                            <td>{{ registro.nf }}</td>
+                            <td>{{ registro.pedido_compra or '' }}</td>
+                            <td class="text-end mov-entrada">{{ registro.quantidade_recebida }}</td>
+                            <td>{{ registro.responsavel_recebimento }}</td>
+                            <td class="text-end">R$ {{ "%.2f"|format(registro.total) }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4">Nenhum registro de entrada encontrado para os filtros aplicados.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}

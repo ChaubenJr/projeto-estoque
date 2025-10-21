@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}Registro Diário de Saídas{% endblock %}
+
+{% block page_title %}Registro Diário de Saídas{% endblock %}
+
+{% block content %}
+    <div class="card shadow-sm">
+        
+        <div class="card-header">
+            <form method="GET" action="{{ url_for('main.registro_diario_saidas') }}">
+                <div class="row g-3 align-items-center">
+
+                    <div class="col-md-3">
+                        <label for="filtro_data" class="visually-hidden">Data</label>
+                        <input type="date" class="form-control" id="filtro_data" name="filtro_data" value="{{ data_iso or '' }}">
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label for="filtro_codigo" class="visually-hidden">Código do Produto</label>
+                        <input type="text" class="form-control" id="filtro_codigo" name="filtro_codigo" placeholder="Filtrar por Código..." value="{{ filtro_codigo or '' }}">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label for="filtro_op" class="visually-hidden">OP</label>
+                        <input type="text" class="form-control" id="filtro_op" name="filtro_op" placeholder="Filtrar por OP..." value="{{ filtro_op or '' }}">
+                    </div>
+
+                    <div class="col-md-3 d-flex justify-content-end" style="gap: 0.75rem;">
+                        <button type="submit" class="btn btn-custom-primary">
+                            <i class="bi bi-funnel-fill"></i> Filtrar
+                        </button>
+                        <a href="{{ url_for('main.registro_diario_saidas') }}" class="btn btn-custom-secondary">
+                            <i class="bi bi-arrow-counterclockwise"></i> Limpar
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    
+        <div class="card-body">
+            <h5 class="card-subtitle mb-3" style="color: rgba(255,255,255,0.6);">
+                Exibindo registros de: {{ data_formatada }}
+            </h5>
+
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Descrição</th>
+                            <th>OP</th>
+                            <th class="text-end">Quantidade</th>
+                            <th>Responsável</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for registro in registros %}
+                        <tr>
+                            <td>{{ registro.cod_produto_embalagem }}</td>
+                            <td>{{ registro.nome_produto }}</td>
+                            <td>{{ registro.op }}</td>
+                            <td class="text-end mov-saida">{{ registro.quantidade_saida }}</td>
+                            <td>{{ registro.responsavel_saida }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4">Nenhum registro de saída encontrado para os filtros aplicados.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}

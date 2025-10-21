@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+
+{% block title %}Movimentações{% endblock %}
+{% block page_title %}Movimentações{% endblock %}
+
+{% block content %}
+    <!-- FLASH MESSAGES -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div id="flash-container" style="position: fixed; top: 90px; right: 20px; z-index: 1050; max-width: 400px;">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+            <script>
+                setTimeout(() => {
+                    const container = document.getElementById('flash-container');
+                    if (container) container.remove();
+                }, 5000);
+            </script>
+        {% endif %}
+    {% endwith %}
+
+    <div class="card shadow-sm">
+        <!-- ==========================
+             FILTROS DE MOVIMENTAÇÕES
+        =========================== -->
+        <div class="card-header pb-2">
+            <form id="form-filtro" method="GET" class="d-flex flex-wrap align-items-center gap-2">
+
+                {% import "macros/campos.html" as campos %}
+
+                {{ campos.input_text('filtro_codigo', 'Código', filtro_codigo) }}
+                {{ campos.input_text('filtro_nf', 'NF', filtro_nf) }}
+                {{ campos.input_text('filtro_op', 'OP', filtro_op) }}
+                {{ campos.input_date('filtro_data_inicio', filtro_data_inicio) }}
+                {{ campos.input_date('filtro_data_fim', filtro_data_fim) }}
+
+                <!-- Botões compactos -->
+                <button type="submit" class="btn btn-custom-primary" title="Filtrar">
+                    <i class="bi bi-funnel-fill"></i> Filtrar
+                </button>
+
+                <a href="{{ url_for('main.movimentacao') }}" class="btn btn-light border text-secondary" title="Limpar filtros">
+                    <i class="bi bi-arrow-counterclockwise"></i> Limpar
+                </a>
+
+                <!-- Botão enviar relatórios -->
+                <form 
+                    id="form-enviar-relatorios"
+                    action="{{ url_for('main.enviar_movimentacoes_tudo') }}"
+                    method="POST"
+                    class="d-inline"
+                >
+                    <input type="hidden" name="filtro_codigo" value="{{ filtro_codigo or '' }}">
+                    <input type="hidden" name="filtro_data_inicio" value="{{ filtro_data_inicio or '' }}">
+                    <input type="hidden" name="filtro_data_fim" value="{{ filtro_data_fim or '' }}">
+                    <input type="hidden" name="filtro_nf" value="{{ filtro_nf or '' }}">
+                    <input type="hidden" name="filtro_op" value="{{ filtro_op or '' }}">
+
+                    <button 
+                        type="submit" 
+                        class="btn btn-custom-secondary"
+                        title="Enviar Relatórios"
+                    >
+                        <i class="bi bi-envelope-fill"></i> Enviar
+                    </button>
+                </form>
+            </form>
+        </div>
+
+        <!-- ==========================
+             TABELA DE MOVIMENTAÇÕES
+        =========================== -->
+        <div class="card-body">
+            <div id="alert-area"></div>
+            <div id="tabela-movimentacoes" class="table-responsive">
+                {% include 'partials/tabela_movimentacoes.html' %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================
+         SCRIPT DE INTERATIVIDADE
+    =========================== -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+
+        const formFiltro = document.getElementById('form-filtro');
+        const tabelaMov = document.getElementById('tabela-movimentacoes');
+        const formRelatorios = document.getElementById('form-enviar-relatorios');
+        const alertArea = document.getElementById('alert-area');
+
+        // === 1. Atualizar filtros ocultos ===
+        function atualizarFiltrosOcultos() {
+            const campos = ['filtro_codigo', 'filtro_data_inicio', 'filtro_data_fim', 'filtro_nf', 'filtro_op'];
+            campos.forEach(nome => {
+                const valor = document.querySelector(`[name="${nome}"]`)?.value || '';
+                const inputHidden = formRelatorios.querySelector(`[name="${nome}"]`);
+                if (inputHidden) inputHidden.value = valor;
+            });
+        }
+
+        // === 2. Mostrar alerta dinâmico ===
+        function mostrarAlerta(tipo, mensagem) {
+            alertArea.innerHTML = `
+                <div class="alert alert-${tipo} alert-dismissible fade show mt-3" role="alert">
+                    ${mensagem}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `;
+            alertArea.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // === 3. Filtrar via AJAX ===
+        formFiltro.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(formFiltro);
+            const params = new URLSearchParams(formData);
+            try {
+                const response = await fetch(`{{ url_for('main.movimentacao') }}?${params}`, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                if (!response.ok) throw new Error('Erro ao buscar movimentações.');
+                const html = await response.text();
+                tabelaMov.innerHTML = html;
+            } catch (error) {
+                mostrarAlerta('danger', 'Falha ao atualizar a tabela. Verifique sua conexão.');
+            }
+        });
+
+        // === 4. Atualizar filtros antes de enviar relatório ===
+        formRelatorios.addEventListener('submit', atualizarFiltrosOcultos);
+    });
+    </script>
+{% endblock %}
