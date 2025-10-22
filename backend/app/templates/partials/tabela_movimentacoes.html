@@ -16,7 +16,7 @@
             {% for mov in movimentacoes %}
             <tr>
                 <td>{{ mov.cod_produto_embalagem or '' }}</td>
-                <td class="text-center">{{ mov.data.strftime('%d/%m/%Y') if mov.data else '' }}</td>
+                <td class="text-center">{{ mov.data.strftime('%d/%m/%Y') if mov.data and mov.data is not string else '' }}</td>
                 <td class="text-center">{{ mov.hora or '' }}</td>
                 <td>{{ mov.nome_produto or '' }}</td>
                 <td class="text-center">{{ mov.nf or '' }}</td>

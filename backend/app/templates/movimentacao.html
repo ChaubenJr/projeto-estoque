@@ -29,47 +29,50 @@
              FILTROS DE MOVIMENTAÇÕES
         =========================== -->
         <div class="card-header pb-2">
-            <form id="form-filtro" method="GET" class="d-flex flex-wrap align-items-center gap-2">
-
-                {% import "macros/campos.html" as campos %}
-
-                {{ campos.input_text('filtro_codigo', 'Código', filtro_codigo) }}
-                {{ campos.input_text('filtro_nf', 'NF', filtro_nf) }}
-                {{ campos.input_text('filtro_op', 'OP', filtro_op) }}
-                {{ campos.input_date('filtro_data_inicio', filtro_data_inicio) }}
-                {{ campos.input_date('filtro_data_fim', filtro_data_fim) }}
-
-                <!-- Botões compactos -->
-                <button type="submit" class="btn btn-custom-primary" title="Filtrar">
-                    <i class="bi bi-funnel-fill"></i> Filtrar
-                </button>
-
-                <a href="{{ url_for('main.movimentacao') }}" class="btn btn-light border text-secondary" title="Limpar filtros">
-                    <i class="bi bi-arrow-counterclockwise"></i> Limpar
-                </a>
-
-                <!-- Botão enviar relatórios -->
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            
+                <!-- FORM DE FILTRO -->
+                <form id="form-filtro" method="GET" class="d-flex flex-wrap align-items-center gap-2 mb-0 flex-grow-1">
+                    {% import "macros/campos.html" as campos %}
+                
+                    {{ campos.input_text('filtro_codigo', 'Código', filtro_codigo) }}
+                    {{ campos.input_text('filtro_nf', 'NF', filtro_nf) }}
+                    {{ campos.input_text('filtro_op', 'OP', filtro_op) }}
+                    {{ campos.input_date('filtro_data_inicio', filtro_data_inicio) }}
+                    {{ campos.input_date('filtro_data_fim', filtro_data_fim) }}
+                
+                    <button type="submit" class="btn btn-custom-primary" title="Filtrar">
+                        <i class="bi bi-funnel-fill"></i> Filtrar
+                    </button>
+                
+                    <a href="{{ url_for('main.movimentacao') }}" class="btn btn-light border text-secondary" title="Limpar filtros">
+                        <i class="bi bi-arrow-counterclockwise"></i> Limpar
+                    </a>
+                
+                    <button 
+                        type="button" 
+                        id="btn-enviar-relatorios"
+                        class="btn btn-custom-secondary ms-auto"
+                        title="Enviar Relatórios"
+                    >
+                        <i class="bi bi-envelope-fill"></i> Enviar
+                    </button>
+                </form>
+            
+                <!-- FORM SEPARADO -->
                 <form 
                     id="form-enviar-relatorios"
                     action="{{ url_for('main.enviar_movimentacoes_tudo') }}"
                     method="POST"
-                    class="d-inline"
+                    class="d-none"
                 >
                     <input type="hidden" name="filtro_codigo" value="{{ filtro_codigo or '' }}">
                     <input type="hidden" name="filtro_data_inicio" value="{{ filtro_data_inicio or '' }}">
                     <input type="hidden" name="filtro_data_fim" value="{{ filtro_data_fim or '' }}">
                     <input type="hidden" name="filtro_nf" value="{{ filtro_nf or '' }}">
                     <input type="hidden" name="filtro_op" value="{{ filtro_op or '' }}">
-
-                    <button 
-                        type="submit" 
-                        class="btn btn-custom-secondary"
-                        title="Enviar Relatórios"
-                    >
-                        <i class="bi bi-envelope-fill"></i> Enviar
-                    </button>
                 </form>
-            </form>
+            </div>
         </div>
 
         <!-- ==========================
@@ -93,14 +96,19 @@
         const tabelaMov = document.getElementById('tabela-movimentacoes');
         const formRelatorios = document.getElementById('form-enviar-relatorios');
         const alertArea = document.getElementById('alert-area');
+        const btnEnviar = document.getElementById('btn-enviar-relatorios'); // ✅ adicionado
 
         // === 1. Atualizar filtros ocultos ===
         function atualizarFiltrosOcultos() {
             const campos = ['filtro_codigo', 'filtro_data_inicio', 'filtro_data_fim', 'filtro_nf', 'filtro_op'];
+            
             campos.forEach(nome => {
-                const valor = document.querySelector(`[name="${nome}"]`)?.value || '';
-                const inputHidden = formRelatorios.querySelector(`[name="${nome}"]`);
-                if (inputHidden) inputHidden.value = valor;
+                const campoVisivel = formFiltro.querySelector(`[name="${nome}"]`);
+                const valor = campoVisivel ? campoVisivel.value.trim() : '';
+                const inputHidden = formRelatorios.querySelector(`input[name="${nome}"][type="hidden"]`);
+                if (inputHidden) {
+                    inputHidden.value = valor;
+                }
             });
         }
 
@@ -132,7 +140,13 @@
             }
         });
 
-        // === 4. Atualizar filtros antes de enviar relatório ===
+        // === 4. Enviar relatórios ===
+        btnEnviar.addEventListener('click', function() {
+            atualizarFiltrosOcultos();
+            formRelatorios.submit();
+        });
+
+        // === 5. Atualizar filtros antes de enviar relatório ===
         formRelatorios.addEventListener('submit', atualizarFiltrosOcultos);
     });
     </script>

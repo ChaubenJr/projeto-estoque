@@ -84,7 +84,7 @@
                     </div>
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Hora do Recebimento</label>
-                        <input type="time" class="form-control" id="hora_recebimento" name="hora_recebimento" required value="00:00">
+                        <input type="time" class="form-control" id="hora_recebimento" name="hora_recebimento" value="00:00" required>
                     </div>
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Valor Total</label>
@@ -104,12 +104,15 @@
         </div>
     </div>
 
-    <!-- Modal para NF duplicada -->
-    <div class="modal fade" id="nfModal" tabindex="-1" aria-labelledby="nfModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <!-- ... (código do modal) ... -->
-        </div>
-    </div>
+    {% if nf_duplicada %}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const nfModal = new bootstrap.Modal(document.getElementById('nfModal'));
+            nfModal.show();
+        });
+    </script>
+    {% endif %}
+
 {% endblock %}
 
 {% block scripts %}

@@ -2,7 +2,7 @@
 from flask import (
     Blueprint, request, jsonify, render_template, redirect, url_for, flash, current_app
 )
-from datetime import date, datetime
+from datetime import date, datetime, time
 from .models import db, EstoqueEmbalagem, EntradasEmbalagens, SaidasEmbalagem, Usuario
 from sqlalchemy import func, union_all, literal_column
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -104,7 +104,8 @@ def montar_movimentacoes_com_saldo(filtro_codigo=None, filtro_nf=None, filtro_op
         db.literal('Saída').label('tipo_movimentacao'),
         SaidasEmbalagem.quantidade_saida.label('quantidade'),
         SaidasEmbalagem.data_saida.label('data'),
-        db.func.substr(SaidasEmbalagem.data_saida, 12, 8).label('hora'),
+        db.func.date_format(SaidasEmbalagem.data_saida, '%H:%i:%s').label('hora')
+,
         db.null().label('nf'),
         SaidasEmbalagem.op.label('op')
     ).join(EstoqueEmbalagem, EstoqueEmbalagem.cod_produto_embalagem == SaidasEmbalagem.cod_produto_embalagem)
@@ -170,6 +171,8 @@ def montar_movimentacoes_com_saldo(filtro_codigo=None, filtro_nf=None, filtro_op
                 if isinstance(m['data'], datetime)
                 and m['data'].date().isoformat() == filtro_data_str
             ]
+        
+    movimentacoes_com_saldo.sort(key=lambda m: (m['data'] or datetime.min, m['hora'] or '00:00:00'))
 
     return movimentacoes_com_saldo
 
@@ -374,6 +377,9 @@ def registro_diario_saidas():
 # ---------------------------
 # ENTRADA / SAÍDA FORM HANDLERS
 # ---------------------------
+from sqlalchemy.exc import IntegrityError
+from datetime import datetime, time
+
 @bp.route("/entrada_embalagem", methods=["POST"])
 def entrada_embalagem():
     try:
@@ -386,56 +392,53 @@ def entrada_embalagem():
 
         data_str = request.form.get("data_recebimento")
         hora_str = request.form.get("hora_recebimento")
-        
-        # --- LÓGICA DE TRATAMENTO DE DATA E HORA MODIFICADA ---
-        
-        # 1. Trata a Data (para a coluna DATE)
-        # Converte a string YYYY-MM-DD em um objeto date do Python
-        if data_str:
-            data_a_salvar = datetime.strptime(data_str, '%Y-%m-%d').date()
-        else:
-            data_a_salvar = None
 
-        # 2. Trata a Hora (para a coluna TIME)
-        # Converte a string HH:MM em um objeto time do Python
-        if hora_str:
-            # Assumindo que a hora no formulário está sempre no formato HH:MM
-            hora_a_salvar = datetime.strptime(hora_str, '%H:%M').time()
-        else:
-            # Se a hora não vier, salva 00:00:00 (ou o valor padrão do seu BD)
-            hora_a_salvar = time(0, 0) # Exemplo: Salva 00:00:00
-        
-        # --- FIM DA LÓGICA DE TRATAMENTO ---
+        # --- LÓGICA DE TRATAMENTO DE DATA E HORA ---
+        data_a_salvar = datetime.strptime(data_str, "%Y-%m-%d").date() if data_str else None
+        hora_a_salvar = datetime.strptime(hora_str, "%H:%M").time() if hora_str else time(0, 0)
 
+        # --- VALIDAÇÕES ---
         produto = EstoqueEmbalagem.query.get(cod_produto)
         if not produto or not produto.ativo:
             flash("Erro: Código de produto não encontrado ou inativo.", "danger")
             return redirect(url_for("main.entrada"))
 
+        # 🔍 VERIFICA SE A NF JÁ EXISTE ANTES DE INSERIR
+        nf_existente = EntradasEmbalagens.query.filter_by(nf=nf).first()
+        if nf_existente:
+            flash(
+                f"⚠️ Atenção: A Nota Fiscal {nf} já está cadastrada no sistema. Caso mais de um produto possua a mesma NF, enumere os itens. Exemplo: {nf}-1.",
+                "warning"
+            )
+
+            return redirect(url_for("main.entrada"))
+
+        # --- INSERE NOVA ENTRADA ---
         nova_entrada = EntradasEmbalagens(
             cod_produto_embalagem=cod_produto,
             nf=nf,
             pedido_compra=pedido_compra,
             quantidade_recebida=quantidade_recebida,
             responsavel_recebimento=responsavel,
-            
-            # ATRIBUIÇÃO PARA COLUNAS SEPARADAS
-            data_recebimento=data_a_salvar,   # Envia apenas a data (tipo DATE)
-            hora_recebimento=hora_a_salvar,   # Envia apenas a hora (tipo TIME)
-            
+            data_recebimento=data_a_salvar,
+            hora_recebimento=hora_a_salvar,
             total=total
         )
+
         db.session.add(nova_entrada)
         db.session.commit()
-        
         flash("Entrada de embalagem registrada com sucesso!", "success")
-        
+
+    except IntegrityError:
+        db.session.rollback()
+        flash("Erro: A Nota Fiscal informada já está cadastrada.", "danger")
+
     except Exception as e:
         db.session.rollback()
-        # É útil saber o erro, mas em produção você pode querer um log mais genérico.
-        flash(f"Ocorreu um erro ao registrar a entrada: {str(e)}", "danger") 
-        
+        flash(f"Ocorreu um erro ao registrar a entrada: {str(e)}", "danger")
+
     return redirect(url_for("main.entrada"))
+
 
 
 @bp.route("/saida_embalagem", methods=["POST"])
@@ -625,27 +628,40 @@ def cadastro():
             flash('O código do produto é obrigatório.', 'danger')
             return redirect(url_for('main.cadastro'))
 
-        # recupera o produto (ORM)
+        # Recupera o produto existente (ORM)
         produto = EstoqueEmbalagem.query.get(cod_produto)
 
         try:
+            # =========================================================================
+            # CADASTRAR NOVO PRODUTO
+            # =========================================================================
             if action == 'cadastrar':
                 if produto:
                     flash(f'O código de produto {cod_produto} já existe. Use Alterar.', 'warning')
                 else:
+                    # Converte campos numéricos vazios ('') em None
+                    estoque_min_raw = (request.form.get('estoque_min') or '').strip()
+                    estoque_max_raw = (request.form.get('estoque_max') or '').strip()
+
+                    estoque_min = int(estoque_min_raw) if estoque_min_raw else None
+                    estoque_max = int(estoque_max_raw) if estoque_max_raw else None
+
                     novo_produto = EstoqueEmbalagem(
                         cod_produto_embalagem=cod_produto,
                         nome_produto=request.form.get('nome_produto') or '',
                         unidade_medida=request.form.get('unidade_medida') or '',
                         padrao_embalagem=request.form.get('padrao_embalagem') or '',
-                        estoque_min=int(request.form.get('estoque_min') or 0),
-                        estoque_max=int(request.form.get('estoque_max') or 0),
+                        estoque_min=estoque_min,
+                        estoque_max=estoque_max,
                         ativo=True
                     )
                     db.session.add(novo_produto)
                     db.session.commit()
                     flash(f'Produto {cod_produto} cadastrado com sucesso!', 'success')
 
+            # =========================================================================
+            # ALTERAR PRODUTO EXISTENTE
+            # =========================================================================
             elif action == 'alterar':
                 if not produto:
                     flash(f'Produto com código {cod_produto} não encontrado para alteração.', 'danger')
@@ -654,19 +670,23 @@ def cadastro():
                     produto.unidade_medida = request.form.get('unidade_medida') or produto.unidade_medida
                     produto.padrao_embalagem = request.form.get('padrao_embalagem') or produto.padrao_embalagem
 
-                    # trata campos numéricos (permite vazio no front => manter valor atual ou zerar)
-                    estoque_min_raw = request.form.get('estoque_min')
-                    estoque_max_raw = request.form.get('estoque_max')
-                    produto.estoque_min = int(estoque_min_raw) if estoque_min_raw not in (None, '') else produto.estoque_min
-                    produto.estoque_max = int(estoque_max_raw) if estoque_max_raw not in (None, '') else produto.estoque_max
+                    # Trata campos numéricos (vazio → None)
+                    estoque_min_raw = (request.form.get('estoque_min') or '').strip()
+                    estoque_max_raw = (request.form.get('estoque_max') or '').strip()
 
-                    # REATIVA automatico caso estivesse inativo
+                    produto.estoque_min = int(estoque_min_raw) if estoque_min_raw else None
+                    produto.estoque_max = int(estoque_max_raw) if estoque_max_raw else None
+
+                    # Reativa automaticamente se estiver inativo
                     if not produto.ativo:
                         produto.ativo = True
 
                     db.session.commit()
                     flash(f'Produto {cod_produto} alterado com sucesso e reativado (se estava inativo).', 'success')
 
+            # =========================================================================
+            # INATIVAR PRODUTO EXISTENTE
+            # =========================================================================
             elif action == 'inativar':
                 if not produto:
                     flash(f'Produto com código {cod_produto} não encontrado para inativação.', 'danger')
@@ -676,6 +696,7 @@ def cadastro():
                     produto.ativo = False
                     db.session.commit()
                     flash(f'Produto {cod_produto} inativado com sucesso!', 'warning')
+
             else:
                 flash('Ação inválida de formulário.', 'danger')
 
@@ -690,7 +711,6 @@ def cadastro():
 
     # GET: mostra o template
     return render_template('cadastro_produto.html')
-
 
 # ---------------------------
 # Cadastro de usuário / alteração de senha
@@ -889,6 +909,9 @@ def movimentacao():
         (data_inicio_interna, data_fim_interna)
     )
 
+    # ----- ORDENAR POR DATA E HORA -----
+    movimentacoes_com_saldo.sort(key=lambda m: (m['data'] or datetime.min, m['hora'] or '00:00:00'))
+
     # Se for requisição AJAX, retorna apenas o partial da tabela
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return render_template('partials/tabela_movimentacoes.html', movimentacoes=movimentacoes_com_saldo)
@@ -908,16 +931,30 @@ def movimentacao():
 @bp.route('/movimentacao/enviar_relatorios', methods=['POST'])
 def enviar_movimentacoes_tudo():
     try:
-        filtro_codigo = request.form.get('filtro_codigo', '')
-        filtro_data_str = request.form.get('filtro_data', '')
-        filtro_nf = request.form.get('filtro_nf', '')
-        filtro_op = request.form.get('filtro_op', '')
+        filtro_codigo = request.form.get('filtro_codigo', '').strip()
+        
+        # --- CORREÇÃO: Obter os filtros de data corretos (inicio e fim) ---
+        filtro_data_inicio_str = request.form.get('filtro_data_inicio', '').strip()
+        filtro_data_fim_str = request.form.get('filtro_data_fim', '').strip()
+        
+        filtro_nf = request.form.get('filtro_nf', '').strip()
+        filtro_op = request.form.get('filtro_op', '').strip()
+        
+        data_filtro_para_montar = None
+        filtro_data_str = 'Todas'
 
+        if filtro_data_inicio_str and filtro_data_fim_str:
+            # Passa a tupla de strings (YYYY-MM-DD) para a função
+            data_filtro_para_montar = (filtro_data_inicio_str, filtro_data_fim_str)
+            filtro_data_str = f"{filtro_data_inicio_str} a {filtro_data_fim_str}"
+        
+        # Chamada à função (mantendo o nome da versão mais recente que usa a tupla)
         movimentacoes = montar_movimentacoes_com_saldo(
-        filtro_codigo.strip() or None,
-        filtro_nf.strip() or None,
-        filtro_op.strip() or None,
-        filtro_data_str.strip() or None)
+            filtro_codigo or None,
+            filtro_nf or None,
+            filtro_op or None,
+            data_filtro_para_montar 
+        )
 
         if not movimentacoes:
             flash("Nenhuma movimentação encontrada com os filtros especificados. E-mail não enviado.", 'warning')
@@ -925,11 +962,10 @@ def enviar_movimentacoes_tudo():
                                      filtro_codigo=filtro_codigo,
                                      filtro_nf=filtro_nf,
                                      filtro_op=filtro_op,
-                                     filtro_data=filtro_data_str))
+                                     filtro_data_inicio=filtro_data_inicio_str,
+                                     filtro_data_fim=filtro_data_fim_str))
 
         current_app.logger.info("Enviar Relatórios - filtros: %s %s %s %s", filtro_codigo, filtro_nf, filtro_op, filtro_data_str)
-        current_app.logger.info("Movimentacoes para PDF (count=%d): %s", len(movimentacoes), movimentacoes[:5])
-
 
         # --- Geração do PDF em paisagem (Kardex) ---
         buffer_pdf = BytesIO()
@@ -945,14 +981,14 @@ def enviar_movimentacoes_tudo():
         Story = []
         styles = getSampleStyleSheet()
 
-        # Título - Padrão limpo da imagem
+        # Título - Padrão limpo
         titulo = Paragraph("Relatório Kardex Movimentações", styles['Heading1'])
-        titulo.style.alignment = 0 # 0 para esquerda (como na imagem)
+        titulo.style.alignment = 0 
         titulo.style.fontName = 'Helvetica-Bold'
         Story.append(titulo)
-        Story.append(Spacer(1, 6)) # Espaçamento menor para visual mais compacto
+        Story.append(Spacer(1, 6)) 
 
-        # Filtros (Mantidos)
+        # Filtros (Atualizado com a nova variável filtro_data_str)
         filtros_p = Paragraph(
             f"Filtros: Cód: {filtro_codigo or 'Todos'} | Data: {filtro_data_str or 'Todas'} | NF: {filtro_nf or 'Todas'} | OP: {filtro_op or 'Todas'}",
             styles['Normal']
@@ -972,21 +1008,29 @@ def enviar_movimentacoes_tudo():
 
         # Dados da tabela
         # ORDEM ATUAL: Cód. Produto, Descrição, Data, S1 (NF), S2 (OP), Entrada, Saída, Saldo Atual
-        data_pdf = [['Cód. Produto', 'Descrição', 'Data', 'S1 (NF)', 'S2 (OP)', 'Entrada', 'Saída', 'Saldo Atual']]
+        data_pdf = [['Cód.', 'Descrição', 'Data', 'S1 (NF)', 'S2 (OP)', 'Entrada', 'Saída', 'Saldo Atual']]
         
         for mov in movimentacoes:
             entrada = mov.get('entrada', 0.0)
             saida = mov.get('saida', 0.0)
             saldo = mov.get('saldo', 0.0)
-        
+            
+            # Formatação de números
             entrada_str = f"{entrada:,.2f}".replace('.', '#').replace(',', '.').replace('#', ',') if entrada > 0 else ''
             saida_str = f"{saida:,.2f}".replace('.', '#').replace(',', '.').replace('#', ',') if saida > 0 else ''
             saldo_str = f"{saldo:,.2f}".replace('.', '#').replace(',', '.').replace('#', ',')
-        
+
+            # --- TRATAMENTO ROBUSTO DE DATA PARA PDF ---
+            data_mov = mov.get('data')
+            data_formatada = ''
+            if data_mov and hasattr(data_mov, 'strftime'):
+                 data_formatada = data_mov.strftime('%d/%m/%Y')
+            # -------------------------------------------
+            
             row = [
                 mov.get('cod_produto_embalagem') or mov.get('codigo', ''),
                 mov.get('nome_produto') or mov.get('descricao', ''),
-                mov.get('data').strftime('%d/%m/%Y') if mov.get('data') else '',
+                data_formatada, # Usa a data formatada corretamente
                 mov.get('nf', ''),
                 mov.get('op', ''),
                 entrada_str,
@@ -995,56 +1039,28 @@ def enviar_movimentacoes_tudo():
             ]
             data_pdf.append(row)
 
-        # Ajuste inteligente das larguras (NOVA IMPLEMENTAÇÃO)
+        # Ajuste inteligente das larguras (mantido)
         def calcular_larguras(data, col_desc_index=1):
-            page_width = landscape(letter)[0] - 20 # Largura útil da página (792 - 10 - 10) = 772 pts
-            col_count = len(data[0])
-            
-            # Larguras FIXAS para as colunas de Código, Data, S1, S2, Entrada, Saída, Saldo (em pontos)
-            # Index: 0       1           2       3      4      5        6       7
-            # Nome: Cód.   Descrição  Data    S1(NF) S2(OP) Entrada  Saída  Saldo Atual
-            larguras = [
-                80,        # [0] Cód. Produto
-                0,         # [1] Descrição (Calculada depois)
-                65,        # [2] Data
-                75,        # [3] S1 (NF)
-                75,        # [4] S2 (OP)
-                70,        # [5] Entrada
-                70,        # [6] Saída
-                75         # [7] Saldo Atual
-            ]
-            
-            # Calcula o espaço ocupado pelas colunas fixas
+            page_width = landscape(letter)[0] - 20 
+            larguras = [45, 0, 65, 75, 75, 70, 70, 75] 
             largura_fixa_total = sum(larguras)
-            
-            # Aloca o espaço restante para a Descrição (índice 1)
-            largura_descricao = max(100, page_width - largura_fixa_total) # Garante pelo menos 100pt ou o que sobrar
-            
-            # Define a largura da Descrição no array
+            largura_descricao = max(100, page_width - largura_fixa_total)
             larguras[col_desc_index] = largura_descricao
-            
-            # Verifica se a soma final está ok (deve ser aproximadamente 772)
-            # print(f"Largura Total Calculada: {sum(larguras)}")
-            
             return larguras
 
         col_widths = calcular_larguras(data_pdf)
 
-        # Criação da tabela
+        # Criação da tabela (mantida)
         table = Table(data_pdf, colWidths=col_widths)
         table_style = TableStyle([
-            # Cabeçalho - Limpo, como na imagem
-            ('ALIGN', (0, 0), (-1, 0), 'LEFT'), # Cabeçalho à esquerda (como na imagem)
+            ('ALIGN', (0, 0), (-1, 0), 'LEFT'), 
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'), 
             ('BOTTOMPADDING', (0, 0), (-1, 0), 6), 
-            ('LINEBELOW', (0, 0), (-1, 0), 1, colors.black), # Linha divisória fina abaixo do cabeçalho
-            
-            # Corpo da Tabela
-            ('ALIGN', (2, 1), (2, -1), 'CENTER'), # Data centralizada (Index 2)
-            ('ALIGN', (3, 1), (4, -1), 'LEFT'),   # S1 (NF) e S2 (OP) à esquerda (Index 3 e 4)
-            ('ALIGN', (5, 1), (-1, -1), 'RIGHT'), # Entrada, Saída, Saldo à direita (Index 5 em diante)
-            
-            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'), # Fonte simples no corpo
+            ('LINEBELOW', (0, 0), (-1, 0), 1, colors.black),
+            ('ALIGN', (2, 1), (2, -1), 'CENTER'),
+            ('ALIGN', (3, 1), (4, -1), 'LEFT'),
+            ('ALIGN', (5, 1), (-1, -1), 'RIGHT'),
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ])
         table.setStyle(table_style)
@@ -1054,10 +1070,11 @@ def enviar_movimentacoes_tudo():
         buffer_pdf.seek(0)
 
         # --- Geração do Excel ---
-        # Mantemos as colunas de dados reais para o Excel, com os títulos S1/S2
         df = pd.DataFrame([
             {
-                'data': m['data'].strftime('%d/%m/%Y') if m['data'] else '',
+                # --- TRATAMENTO ROBUSTO DE DATA PARA EXCEL (Pandas) ---
+                'data': m.get('data').strftime('%d/%m/%Y') if m.get('data') and hasattr(m.get('data'), 'strftime') else '',
+                # --------------------------------------------------------
                 'hora': m.get('hora', ''),
                 'codigo': m.get('cod_produto_embalagem') or m.get('codigo', ''),
                 'descricao': m.get('nome_produto') or m.get('descricao', ''),
@@ -1071,7 +1088,7 @@ def enviar_movimentacoes_tudo():
         ])
 
         df.rename(columns={'data': 'Data', 'hora': 'Hora', 'codigo': 'Código', 'descricao': 'Descrição',
-                           'nf': 'S1 (NF)', 'op': 'S2 (OP)', 'entrada': 'Entrada', 'saida': 'Saída', 'saldo': 'Saldo'}, inplace=True)
+                             'nf': 'S1 (NF)', 'op': 'S2 (OP)', 'entrada': 'Entrada', 'saida': 'Saída', 'saldo': 'Saldo'}, inplace=True)
 
         buffer_excel = BytesIO()
         writer = pd.ExcelWriter(buffer_excel, engine='openpyxl')
@@ -1081,7 +1098,7 @@ def enviar_movimentacoes_tudo():
 
         # --- Envio do e-mail ---
         data_envio = datetime.now().strftime('%d/%m/%Y %H:%M')
-        # ... (código de envio de e-mail) ...
+        
         msg = Message(
             f'Relatórios de Movimentações (Kardex) - {data_envio}',
             sender=current_app.config.get('MAIL_USERNAME'),
@@ -1094,14 +1111,19 @@ def enviar_movimentacoes_tudo():
 
         mail = current_app.extensions.get('mail')
         if mail:
-            mail.send(msg)
-            flash('Relatórios de Movimentações (Kardex: PDF e Excel) enviados por e-mail com sucesso! ✅', 'success')
+            try:
+                mail.send(msg)
+                flash('Relatórios de Movimentações (Kardex: PDF e Excel) enviados por e-mail com sucesso! ✅', 'success')
+            except Exception as mail_e:
+                 current_app.logger.exception(f"ERRO DE ENVIO DE E-MAIL SMTP/Flask-Mail para {msg.recipients}")
+                 flash(f"Falha no envio do e-mail. Verifique as configurações (SMTP/Credenciais). Erro: {str(mail_e)} ❌", 'danger')
         else:
             flash('Erro: Flask-Mail não está configurado. E-mail não enviado. ❌', 'danger')
 
 
     except Exception as e:
-        current_app.logger.exception("Erro ao enviar relatórios de movimentações")
-        flash(f"Erro ao enviar os relatórios de movimentações: {str(e)} ⚠️", 'danger')
+        # Erro geral de processamento (dados, pdf, excel, etc.)
+        current_app.logger.exception("Erro GERAL ao processar e enviar relatórios de movimentações")
+        flash(f"Erro GERAL ao processar e enviar os relatórios: {str(e)} ⚠️", 'danger')
 
     return redirect(request.referrer or url_for('main.movimentacao'))
