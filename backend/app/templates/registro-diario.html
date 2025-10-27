@@ -62,7 +62,7 @@
                             <td>{{ registro.cod_produto_embalagem }}</td>
                             <td>{{ registro.nome_produto }}</td>
                             <td>{{ registro.nf }}</td>
-                            <td>{{ registro.pedido_compra }}</td>
+                            <td>{{ registro.pedido_compra or '' }}</td>
                             <td class="text-end mov-entrada">{{ registro.quantidade_recebida }}</td>
                             <td>{{ registro.responsavel_recebimento }}</td>
                             <td class="text-end">R$ {{ "%.2f"|format(registro.total) }}</td>

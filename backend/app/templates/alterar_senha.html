@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}Alterar Senha{% endblock %}
+
+{% block page_title %}Alterar Senha{% endblock %}
+
+{% block content %}
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div style="position: fixed; top: 20px; right: 20px; z-index: 1050; width: auto; max-width: 400px;">
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <div class="d-flex justify-content-center align-items-center" style="min-height: 70vh;">
+        <div class="card shadow-sm" style="width: 100%; max-width: 450px;">
+            <div class="card-header bg-custom-primary text-white text-center">
+                <h4 class="mb-0">Alterar Minha Senha</h4>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="{{ url_for('main.alterar_senha') }}">
+                    
+                    <div class="mb-3 mt-3">
+                        <label for="nova_senha" class="form-label">Nova Senha</label>
+                        <input type="password" class="form-control" id="nova_senha" name="nova_senha" required autofocus>
+                    </div>
+                    <div class="mb-4">
+                        <label for="confirmacao_senha" class="form-label">Confirmar Nova Senha</label>
+                        <input type="password" class="form-control" id="confirmacao_senha" name="confirmacao_senha" required>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-warning">
+                            <i class="bi bi-key-fill"></i> Alterar Senha
+                        </button>
+                    </div>
+                </form>
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('main.cadastro') }}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-arrow-left"></i> Voltar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

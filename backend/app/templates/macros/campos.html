@@ -1,0 +1,27 @@
+{% macro input_text(name, placeholder, value='') %}
+    {% set col_size = 
+        'col-md-2' if name == 'filtro_codigo' else
+        'col-md-1' if name in ['filtro_nf', 'filtro_op'] else
+        'col-md-2'
+    %}
+    <div class="{{ col_size }}">
+        <input 
+            type="text" 
+            class="form-control"
+            name="{{ name }}"
+            placeholder="{{ placeholder }}"
+            value="{{ value or '' }}"
+        >
+    </div>
+{% endmacro %}
+
+{% macro input_date(name, value='') %}
+    <div class="col-md-2">
+        <input 
+            type="date"
+            class="form-control"
+            name="{{ name }}"
+            value="{{ value or '' }}"
+        >
+    </div>
+{% endmacro %}

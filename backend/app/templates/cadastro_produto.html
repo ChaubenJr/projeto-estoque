@@ -1,0 +1,280 @@
+{% extends 'base.html' %}
+
+{% block title %}Cadastro de Produto{% endblock %}
+
+{% block page_title %}Cadastro{% endblock %}
+
+{% block content %}
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div style="position: fixed; top: 20px; right: 20px; z-index: 1050; width: auto; max-width: 400px;">
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <div class="card shadow-sm">
+        <div class="card-body p-4">
+            <form id="cadastro-form" method="POST" action="{{ url_for('main.cadastro') }}">
+                <div class="row mb-3 mt-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Código do Produto</label>
+                        <input type="text" id="cod_produto_embalagem" name="cod_produto_embalagem" class="form-control" required>
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label">Descrição do Produto</label>
+                        <input type="text" id="nome_produto" name="nome_produto" class="form-control" required>
+                    </div>
+                </div>
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <label class="form-label">Unidade de Medida</label>
+                        <input type="text" id="unidade_medida" name="unidade_medida" class="form-control" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Padrão de Embalagem</label>
+                        <input type="text" id="padrao_embalagem" name="padrao_embalagem" class="form-control" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Estoque Mínimo</label>
+                        <input type="number" id="estoque_min" name="estoque_min" class="form-control" min="0">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Estoque Máximo</label>
+                        <input type="number" id="estoque_max" name="estoque_max" class="form-control" min="0">
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-center mt-5">
+                    
+                    <button type="submit" id="btn-cadastrar" name="action" value="cadastrar" class="btn btn-custom-primary me-3">
+                        <i class="bi bi-plus-circle-fill"></i> Cadastrar
+                    </button>
+                    
+                    <button type="submit" id="btn-alterar" name="action" value="alterar" class="btn btn-warning me-3" disabled>
+                        <i class="bi bi-pencil-square"></i> Alterar
+                    </button>
+                    
+                    <button type="submit" id="btn-inativar" name="action" value="inativar" class="btn btn-danger" disabled>
+                        <i class="bi bi-x-circle-fill"></i> Inativar
+                    </button>
+                </div>
+            </form>
+
+            <div class="d-flex justify-content-center mt-4 gap-4">
+                
+                <a href="{{ url_for('main.cadastro_usuario') }}" class="btn btn-link text-decoration-none text-secondary p-0" title="Cadastrar Novo Usuário">
+                    <i class="bi bi-person-plus-fill fs-3"></i>
+                </a>
+                
+                <a href="{{ url_for('main.alterar_senha') }}" class="btn btn-link text-decoration-none text-secondary p-0" title="Alterar Senha">
+                    <i class="bi bi-key-fill fs-3"></i>
+                </a>
+                
+                <a href="{{ url_for('main.logout') }}" class="btn btn-link text-decoration-none text-secondary p-0" title="Sair">
+                    <i class="bi bi-box-arrow-right fs-3"></i>
+                </a>
+                
+            </div>
+            </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // =========================================================================
+    // 1. Variáveis e Configurações
+    // =========================================================================
+    
+    // Elementos de Input
+    const codInput = document.getElementById('cod_produto_embalagem'); 
+    const nomeInput = document.getElementById('nome_produto');
+    const umInput = document.getElementById('unidade_medida');
+    const padraoInput = document.getElementById('padrao_embalagem');
+    const minInput = document.getElementById('estoque_min');
+    const maxInput = document.getElementById('estoque_max');
+    
+    // Botões de Ação
+    const btnCadastrar = document.getElementById('btn-cadastrar');
+    const btnAlterar = document.getElementById('btn-alterar');
+    const btnInativar = document.getElementById('btn-inativar');
+    
+    // Variáveis para Debounce
+    let typingTimer;
+    const doneTypingInterval = 500; // 0.5 segundo
+    
+    // =========================================================================
+    // 2. Funções de Controle de Estado
+    // =========================================================================
+    
+    // Função para gerenciar o estado dos botões
+    function setFormState(isFound, isProdutoAtivo) {
+        if (isFound) {
+            btnCadastrar.disabled = true;
+            // Botão Alterar sempre habilitado se o produto for encontrado (para permitir reativação)
+            btnAlterar.disabled = false; 
+            // Habilita Inativar APENAS se o produto estiver ativo (isProdutoAtivo == true)
+            btnInativar.disabled = !isProdutoAtivo; 
+        } else {
+            // Se o produto não for encontrado, permite apenas o cadastro
+            btnCadastrar.disabled = (codInput.value.trim().length === 0);
+            btnAlterar.disabled = true;
+            btnInativar.disabled = true;
+        }
+    }
+
+    // Função para limpar campos de dados e resetar a validação visual
+    function clearDataInputs() {
+        nomeInput.value = '';
+        umInput.value = '';
+        padraoInput.value = '';
+        minInput.value = '';
+        maxInput.value = '';
+        codInput.classList.remove('is-valid', 'is-invalid', 'is-loading');
+    }
+
+    
+    // =========================================================================
+    // 3. Lógica de Consulta ao Produto (AJAX/Fetch)
+    // =========================================================================
+    
+    function checkProductCode() {
+        const codProduto = codInput.value.trim();
+    
+        // Geração da URL com Jinja2/Flask
+        const urlTemplate = "{{ url_for('main.consulta_produto', codigo='__COD__') }}";
+        const urlConsulta = urlTemplate.replace('__COD__', codProduto);
+        
+        codInput.classList.add('is-loading'); // Feedback visual de carregamento
+        
+        fetch(urlConsulta) 
+            .then(response => {
+                codInput.classList.remove('is-loading'); // Remove carregamento
+
+                if (response.status === 404) {
+                    return { status: 'not_found' };
+                }
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === 'success' && data.produto) {
+                    // Produto encontrado: Preenche os campos
+                    nomeInput.value = data.produto.nome_produto;
+                    umInput.value = data.produto.unidade_medida;
+                    padraoInput.value = data.produto.padrao_embalagem;
+                    
+                    // Trata valores nulos (null) do backend, convertendo para string vazia
+                    minInput.value = data.produto.estoque_min !== null ? data.produto.estoque_min : '';
+                    maxInput.value = data.produto.estoque_max !== null ? data.produto.estoque_max : '';
+
+                    // Controle de Estado
+                    setFormState(true, data.produto.ativo);
+                    
+                    // Feedback visual de sucesso
+                    codInput.classList.add('is-valid');
+                    codInput.classList.remove('is-invalid');
+                
+                } else {
+                    // Produto NÃO encontrado ou status falhou (not_found/error)
+                    clearDataInputs(); 
+                    
+                    // Controle de Estado (Permite cadastro se o campo Cod. Produto não estiver vazio)
+                    setFormState(false, false);
+                    
+                }
+            })
+            .catch(error => {
+                console.error('Erro na consulta:', error);
+                codInput.classList.remove('is-loading');
+                
+                // Em caso de erro de rede ou servidor
+                clearDataInputs();
+                setFormState(false, false); 
+                
+                codInput.classList.add('is-invalid');
+                codInput.classList.remove('is-valid');
+            });
+    }
+    
+    // =========================================================================
+    // 4. Lógica de Submissão do Formulário (Trata null em campos vazios)
+    // =========================================================================
+
+    // Event listener para a submissão do formulário
+    document.getElementById('cadastro-form').addEventListener('submit', (event) => {
+        
+        // Função auxiliar para transformar string vazia ou '0' em '' para backend (representação de null/None)
+        const formatNumericInput = (inputElement) => {
+            const value = inputElement.value.trim();
+            // Se o valor estiver vazio ou for '0', retorna string vazia para ser tratado como None/null no backend
+            if (value === '' || value === '0') {
+                return ''; 
+            }
+            return value; // Caso contrário, mantém o valor
+        };
+
+        // Aplica a formatação APENAS se a ação não for 'inativar'
+        const action = event.submitter ? event.submitter.value : '';
+
+        if (action !== 'inativar') {
+            // Altera o valor nos inputs ANTES da submissão: '' no front vira None/null no back
+            minInput.value = formatNumericInput(minInput);
+            maxInput.value = formatNumericInput(maxInput);
+        }
+    });
+
+    
+    // =========================================================================
+    // 5. Event Listener (Gatilho da Consulta)
+    // =========================================================================
+    
+    codInput.addEventListener('input', () => {
+        clearTimeout(typingTimer);
+        
+        if (codInput.value.trim().length === 0) {
+            clearDataInputs();
+            setFormState(false, false);
+        } else {
+            // Limpa os campos de dados do produto enquanto o usuário digita
+            clearDataInputs();
+            
+            // Desabilita todos os botões (exceto cadastro, que será tratado no setTimeout)
+            setFormState(false, false); 
+
+            // Define o novo timer para iniciar a consulta
+            typingTimer = setTimeout(checkProductCode, doneTypingInterval);
+        }
+    });
+    
+    // =========================================================================
+    // 6. Lógica de Inicialização e Alertas (jQuery)
+    // =========================================================================
+    
+    $(document).ready(function() {
+        // Inicializa o estado dos botões e campos
+        clearDataInputs();
+        setFormState(false, false); // Permite cadastrar se o campo estiver vazio
+        
+        // Lógica de fechamento automático dos alertas flash
+        const alerts = $('.alert');
+        alerts.each(function() {
+            setTimeout(() => {
+                $(this).alert('close'); 
+            }, 5000);
+        });
+    });
+
+</script>
+{% endblock %}
