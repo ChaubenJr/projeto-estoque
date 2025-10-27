@@ -1,12 +1,13 @@
 {% extends 'base.html' %}
 
-{% block title %}Registro de Entradas{% endblock %}
+{% set data = form_data if form_data else {} %}
 
 {% block page_title %}Registro de Entradas{% endblock %}
 
 {% block content %}
 
-    <!-- Exibição de mensagens flash -->
+    {% set data = form_data if form_data else {} %}
+
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             <div style="position: fixed; top: 90px; right: 20px; z-index: 1050; width: auto; max-width: 400px;">
@@ -25,7 +26,6 @@
     {% endwith %}
 
     <div class="card shadow-sm">
-        <!-- NOVO CABEÇALHO AZUL -->
         <div class="card-header">
             <h3 class="h5 mb-0">Formulário de Entrada</h3>
         </div>
@@ -36,6 +36,13 @@
                     <div class="col-md-4 mb-3">
                         <label class="form-label">Código do Produto</label>
                         <select class="form-select" id="cod_produto_embalagem" name="cod_produto_embalagem" required>
+                            {% if data.cod_produto_embalagem %}
+                                <option value="{{ data.cod_produto_embalagem }}" selected>
+                                    {{ data.cod_produto_embalagem }}
+                                </option>
+                            {% else %}
+                                <option value="" disabled selected>Selecione o Produto</option>
+                            {% endif %}
                         </select>
                     </div>
                     <div class="col-md-6 mb-3">
@@ -51,11 +58,14 @@
                 <div class="row mb-4">
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Nota Fiscal</label>
-                        <input type="text" class="form-control" id="nf" name="nf" required>
+                        <input type="text" class="form-control" id="nf" name="nf" required
+                               value="{{ data.nf | default('', true) }}">
                     </div>
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Pedido de Compra</label>
-                        <input type="text" class="form-control" id="pedido_compra" name="pedido_compra" pattern="\d*" maxlength="5" title="O pedido de compra deve conter no máximo 5 números." required>
+                        <input type="text" class="form-control" id="pedido_compra" name="pedido_compra" 
+                               pattern="\d*" maxlength="5" title="O pedido de compra deve conter no máximo 5 números." required
+                               value="{{ data.pedido_compra | default('', true) }}">
                     </div>
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Padrão de Embalagem</label>
@@ -64,7 +74,8 @@
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Quantidade Recebida</label>
                         <div class="number-input-wrapper">
-                            <input type="number" class="form-control" id="quantidadeRecebida" name="quantidade_recebida" required>
+                            <input type="number" class="form-control" id="quantidadeRecebida" name="quantidade_recebida" required
+                                   value="{{ data.quantidade_recebida | default('', true) }}">
                             <div class="number-input-arrows">
                                 <span class="arrow-up"></span>
                                 <span class="arrow-down"></span>
@@ -76,19 +87,23 @@
                 <div class="row mb-4">
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Responsável</label>
-                        <input type="text" class="form-control" name="responsavel_recebimento" required>
+                        <input type="text" class="form-control" name="responsavel_recebimento" required
+                               value="{{ data.responsavel_recebimento | default('', true) }}">
                     </div>
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Data do Recebimento</label>
-                        <input type="date" class="form-control" name="data_recebimento" required>
+                        <input type="date" class="form-control" name="data_recebimento" required
+                               value="{{ data.data_recebimento | default('', true) }}">
                     </div>
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Hora do Recebimento</label>
-                        <input type="time" class="form-control" id="hora_recebimento" name="hora_recebimento" value="00:00" required>
+                        <input type="time" class="form-control" id="hora_recebimento" name="hora_recebimento" required
+                               value="{{ data.hora_recebimento | default('00:00', true) }}">
                     </div>
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Valor Total</label>
-                        <input type="number" class="form-control" name="valor_total" step="0.01" required>
+                        <input type="number" class="form-control" name="valor_total" step="0.01" required
+                               value="{{ data.valor_total | default('', true) }}">
                     </div>
                 </div>
 
@@ -121,11 +136,13 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         const produtosData = {{ produtos_para_template | tojson | safe }};
+        const selectedProduto = '{{ data.cod_produto_embalagem | default('', true) }}'; // Passa o valor antigo
     </script>
     <script src="{{ url_for('static', filename='scripts/main.js') }}"></script>
     
     <script>
         $(document).ready(function() {
+            // Lógica para os botões de incremento/decremento
             document.querySelectorAll('.number-input-wrapper').forEach(wrapper => {
                 const input = wrapper.querySelector('input[type="number"]');
                 const arrowUp = wrapper.querySelector('.arrow-up');
@@ -136,8 +153,9 @@
                 }
             });
 
-            // Lógica dos alertas e modal
+            // IMPORTANTE: Se o seu script 'main.js' popula o select e campos 'readonly', 
+            // você deve garantir que ele use a variável 'selectedProduto' (passada acima)
+            // para pré-selecionar o produto e preencher a descrição e unidade.
         });
     </script>
 {% endblock %}
-

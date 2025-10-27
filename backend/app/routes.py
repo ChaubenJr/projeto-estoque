@@ -1,6 +1,6 @@
 # routes.py (reestruturado, comentado e com correções)
 from flask import (
-    Blueprint, request, jsonify, render_template, redirect, url_for, flash, current_app
+    Blueprint, request, jsonify, render_template, redirect, url_for, flash, current_app, session
 )
 from datetime import date, datetime, time
 from .models import db, EstoqueEmbalagem, EntradasEmbalagens, SaidasEmbalagem, Usuario
@@ -155,7 +155,7 @@ def montar_movimentacoes_com_saldo(filtro_codigo=None, filtro_nf=None, filtro_op
 
     # ----- FILTRO DE DATA (individual OU intervalo) -----
     if filtro_data_str:
-        # 👉 Caso seja intervalo (tupla)
+        # Caso seja intervalo (tupla)
         if isinstance(filtro_data_str, tuple) and len(filtro_data_str) == 2:
             data_inicio = datetime.fromisoformat(filtro_data_str[0])
             data_fim = datetime.fromisoformat(filtro_data_str[1])
@@ -165,7 +165,7 @@ def montar_movimentacoes_com_saldo(filtro_codigo=None, filtro_nf=None, filtro_op
                 and data_inicio.date() <= m['data'].date() <= data_fim.date()
             ]
         else:
-            # 👉 Caso seja uma única data (string)
+            # Caso seja uma única data (string)
             movimentacoes_com_saldo = [
                 m for m in movimentacoes_com_saldo
                 if isinstance(m['data'], datetime)
@@ -249,10 +249,18 @@ def index():
         return redirect(url_for("main.entrada"))
     return redirect(url_for("main.login"))
 
-
 @bp.route("/entrada")
 def entrada():
+    # 1. PEGA DADOS ANTIGOS DA SESSÃO E OS REMOVE
+    # Se houver dados de um envio POST falho (NF duplicada), eles estarão aqui.
+    # O .pop() garante que eles sejam removidos após serem lidos, 
+    # para não reaparecerem em uma recarga normal.
+    form_data = session.pop("entrada_embalagem_form_data", None)
+
+    # 2. CARREGA A LISTA DE PRODUTOS ATIVOS
     produtos_objetos = EstoqueEmbalagem.query.filter_by(ativo=True).all()
+    
+    # 3. CRIA A ESTRUTURA DE DADOS PARA O TEMPLATE
     produtos_para_template = [
         {
             "cod_produto_embalagem": p.cod_produto_embalagem,
@@ -261,7 +269,13 @@ def entrada():
             "unidade_medida": p.unidade_medida
         } for p in produtos_objetos
     ]
-    return render_template("entrada.html", produtos_para_template=produtos_para_template)
+    
+    # 4. RENDERIZA O TEMPLATE, PASSANDO OS PRODUTOS E OS DADOS ANTIGOS DO FORMULÁRIO
+    return render_template(
+        "entrada.html", 
+        produtos_para_template=produtos_para_template,
+        form_data=form_data # Variável crucial para preencher os campos
+    )
 
 
 @bp.route("/saida")
@@ -377,40 +391,51 @@ def registro_diario_saidas():
 # ---------------------------
 # ENTRADA / SAÍDA FORM HANDLERS
 # ---------------------------
-from sqlalchemy.exc import IntegrityError
-from datetime import datetime, time
-
 @bp.route("/entrada_embalagem", methods=["POST"])
 def entrada_embalagem():
-    try:
-        cod_produto = request.form.get("cod_produto_embalagem")
-        nf = request.form.get("nf")
-        pedido_compra = request.form.get("pedido_compra")
-        quantidade_recebida = int(request.form.get("quantidade_recebida") or 0)
-        responsavel = request.form.get("responsavel_recebimento")
-        total = float(request.form.get("valor_total") or 0.0)
+    # 1. PEGA TODOS OS DADOS DO FORMULÁRIO E SALVA NA SESSÃO
+    form_data = {
+        "cod_produto_embalagem": request.form.get("cod_produto_embalagem"),
+        "nf": request.form.get("nf"),
+        "pedido_compra": request.form.get("pedido_compra"),
+        "quantidade_recebida": request.form.get("quantidade_recebida"),
+        "responsavel_recebimento": request.form.get("responsavel_recebimento"),
+        "valor_total": request.form.get("valor_total"),
+        "data_recebimento": request.form.get("data_recebimento"),
+        "hora_recebimento": request.form.get("hora_recebimento"),
+    }
+    session["entrada_embalagem_form_data"] = form_data
 
-        data_str = request.form.get("data_recebimento")
-        hora_str = request.form.get("hora_recebimento")
+    try:
+        cod_produto = form_data["cod_produto_embalagem"]
+        nf = form_data["nf"]
+        pedido_compra = form_data["pedido_compra"]
+        responsavel = form_data["responsavel_recebimento"]
+        data_str = form_data["data_recebimento"]
+        hora_str = form_data["hora_recebimento"]
+
+        # Converte valores numéricos. Usa 0 ou 0.0 se a string for vazia.
+        quantidade_recebida = int(form_data["quantidade_recebida"] or 0)
+        total = float(form_data["valor_total"] or 0.0)
 
         # --- LÓGICA DE TRATAMENTO DE DATA E HORA ---
         data_a_salvar = datetime.strptime(data_str, "%Y-%m-%d").date() if data_str else None
         hora_a_salvar = datetime.strptime(hora_str, "%H:%M").time() if hora_str else time(0, 0)
 
-        # --- VALIDAÇÕES ---
+        # --- VALIDAÇÕES GERAIS ---
         produto = EstoqueEmbalagem.query.get(cod_produto)
         if not produto or not produto.ativo:
             flash("Erro: Código de produto não encontrado ou inativo.", "danger")
             return redirect(url_for("main.entrada"))
 
-        # 🔍 VERIFICA SE A NF JÁ EXISTE ANTES DE INSERIR
+        # 🔍 VERIFICA SE A NF JÁ EXISTE
         nf_existente = EntradasEmbalagens.query.filter_by(nf=nf).first()
         if nf_existente:
+            # A NF é duplicada. Mantém os dados na session para o usuário corrigir.
             flash(
                 f"⚠️ Atenção: A Nota Fiscal {nf} já está cadastrada no sistema. Caso mais de um produto possua a mesma NF, enumere os itens. Exemplo: {nf}-1.",
                 "warning"
             )
-
             return redirect(url_for("main.entrada"))
 
         # --- INSERE NOVA ENTRADA ---
@@ -428,18 +453,20 @@ def entrada_embalagem():
         db.session.add(nova_entrada)
         db.session.commit()
         flash("Entrada de embalagem registrada com sucesso!", "success")
+        
+        # 2. SE HÁ SUCESSO, REMOVE OS DADOS DA SESSÃO
+        session.pop("entrada_embalagem_form_data", None) 
 
     except IntegrityError:
         db.session.rollback()
-        flash("Erro: A Nota Fiscal informada já está cadastrada.", "danger")
+        flash("Erro de banco de dados: A Nota Fiscal informada já está cadastrada.", "danger")
 
     except Exception as e:
         db.session.rollback()
+        # Se ocorrer um erro, os dados continuam na session para o usuário corrigir.
         flash(f"Ocorreu um erro ao registrar a entrada: {str(e)}", "danger")
 
     return redirect(url_for("main.entrada"))
-
-
 
 @bp.route("/saida_embalagem", methods=["POST"])
 def saida_embalagem():
