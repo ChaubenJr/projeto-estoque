@@ -1129,7 +1129,7 @@ def enviar_movimentacoes_tudo():
         msg = Message(
             f'Relatórios de Movimentações (Kardex) - {data_envio}',
             sender=current_app.config.get('MAIL_USERNAME'),
-            recipients=[current_app.config.get('MAIL_RECIPIENT', 'clewertonsouza8@gmail.com')]
+            recipients=[current_app.config.get('MAIL_RECIPIENT', 'clewertonsouza8@gmail.com'), 'chaubenjunior@gmail.com']
         )
         msg.body = f'Prezado, em anexo os relatórios de movimentações no formato Kardex (PDF e Excel).'
         filename_base = datetime.now().strftime('%Y%m%d_%H%M')
